@@ -7,6 +7,8 @@ export default withMermaid(defineConfig({
   lang: 'zh-CN',
 
   themeConfig: {
+    siteTitle: false,
+
     nav: [
       { text: '首页', link: '/' },
       { text: '博客', link: '/blog/' },
