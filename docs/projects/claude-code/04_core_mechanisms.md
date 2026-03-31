@@ -3,7 +3,6 @@
 
 > 本章深入剖析 Claude Code 的关键状态容器、控制逻辑算法以及阶段 5 模块选择策略。所有分析均基于 Source Map 反向推导出的 1906 个应用源文件以及 `sdk-tools.d.ts` 公开类型定义交叉验证。
 
----
 
 ## 目录
 
@@ -22,7 +21,6 @@
    - 2.5 [通信架构](#25-通信架构)
 3. [阶段 5 模块选择策略](#3-阶段-5-模块选择策略)
 
----
 
 ## 1. 关键状态容器
 
@@ -107,7 +105,6 @@ function selectCurrentPermissionMode(state: AppState): PermissionMode {
 
 AppState 通过 React Context 注入到 Ink 组件树中。组件通过 `useAppState()` Hook 获取状态，通过 `setAppState()` 触发更新。由于 Ink 基于 React Reconciler 实现终端 UI 渲染，状态变更会触发整个组件树的 diff-and-patch 过程。
 
----
 
 ### 1.2 Message / ContentBlock — 对话消息数据模型
 
@@ -179,7 +176,6 @@ Claude Code 在消息进入 API 调用之前会进行多步规范化处理：
 
 这些谓词在消息渲染、消息过滤、上下文压缩等场景中被广泛使用。
 
----
 
 ### 1.3 Tool — 工具基类定义
 
@@ -290,7 +286,6 @@ interface Tool {
 
 `toolPool.ts` 实现了工具的延迟加载策略。并非所有 30+ 工具都在启动时加载，部分低频工具（如 CronCreate、TeamCreate 等）仅在被实际调用时才完成初始化。ToolSearch 工具正是为此设计——它允许 Claude 在对话中先搜索可用工具的 Schema 定义，再决定是否调用。
 
----
 
 ### 1.4 Task — 任务管理
 
@@ -403,7 +398,6 @@ Shell 任务具有额外的安全保护机制：
 - 超时控制（最大 600000ms / 10 分钟）
 - 后台化支持（用户按 Ctrl+B 或自动后台化长时间运行的命令）
 
----
 
 ### 1.5 PermissionRule / PermissionResult — 权限规则和决策结果
 
@@ -482,7 +476,6 @@ interface PermissionResult {
 6. 工具默认行为（只读工具默认允许，写入工具默认需要授权）
 ```
 
----
 
 ### 1.6 CostTracker — 成本追踪器
 
@@ -554,7 +547,6 @@ CostTracker 区分了四种 Token 类型以精确计算成本：
 
 当接近速率限制时，`useRateLimitWarningNotification.tsx` 会在终端底部显示警告通知，`rateLimitMessages.ts` 生成友好的限制说明文案。
 
----
 
 ## 2. 控制逻辑算法图
 
@@ -709,7 +701,6 @@ processUserInput()
     (继续内循环)
 ```
 
----
 
 ### 2.2 工具调度
 
@@ -848,7 +839,6 @@ class StreamingToolExecutor {
         └── 先并发执行独立组，再串行执行依赖组
 ```
 
----
 
 ### 2.3 权限控制算法
 
@@ -1053,7 +1043,6 @@ yoloClassifier 安全分级
     └── WorkerPendingPermission.tsx
 ```
 
----
 
 ### 2.4 上下文管理
 
@@ -1217,7 +1206,6 @@ CLAUDE.md 加载层级
 - `src/memdir/` — 内存目录管理（6 个文件）
 - `src/projectOnboardingState.ts` — 项目 Onboarding 状态检测
 
----
 
 ### 2.5 通信架构
 
@@ -1560,7 +1548,6 @@ spawn(shell, ['-c', prefixedCommand])
         └── 信号终止 → 标记为 interrupted
 ```
 
----
 
 ## 3. 阶段 5 模块选择策略
 
@@ -1672,7 +1659,6 @@ spawn(shell, ['-c', prefixedCommand])
 
 **核心源文件数量**：约 25 个（`src/services/compact/` + `src/memdir/` + `src/services/SessionMemory/` + `src/services/extractMemories/`）
 
----
 
 ### 模块选择汇总
 

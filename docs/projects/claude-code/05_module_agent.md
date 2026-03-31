@@ -3,7 +3,6 @@
 
 > 本章对 Claude Code 的 Agent 子进程并发执行框架进行全面解构。Agent 系统是 Claude Code 中最复杂的子系统之一，它使 CLI 从"单轮对话工具"演进为"多进程协调执行框架"，支持任务分解、并行执行、进程隔离与代理间通信。所有分析基于 `cli.js`（16667 行）源码逆向验证，辅以 `sdk-tools.d.ts` 公开类型交叉确认。
 
----
 
 ## 目录
 
@@ -25,7 +24,6 @@
 3. [演进思维实验](#3-演进思维实验)
 4. [验证策略](#4-验证策略)
 
----
 
 ## 1. 接口契约
 
@@ -134,7 +132,6 @@ xr1 = B6(() => {
 
 Schema 的条件裁剪体现了**环境自适应**设计：当 `CLAUDE_CODE_DISABLE_BACKGROUND_TASKS` 环境变量启用或 fork 模式禁用时，`run_in_background` 参数从 Schema 中移除——Schema 本身就是该参数不可用的最佳文档。
 
----
 
 ## 2. 实现机制
 
@@ -580,7 +577,6 @@ if (!mR6 && !J6 && I6 >= Z4Y && H.setToolJSX)
 - `cumulativeOutputTokens`：累计输出令牌数
 - `recentActivities`：最近活动记录（保留最近 5 条，`c4Y = 5`）
 
----
 
 ## 3. 演进思维实验
 
@@ -659,7 +655,6 @@ Agent 系统本质上是一个**用户态进程调度器**：
 - `tasks` 全局状态是 `/proc` 文件系统的类比
 - `evictAfter` 是僵尸进程回收
 
----
 
 ## 4. 验证策略
 
@@ -740,7 +735,6 @@ A3(taskId, setAppState, (state) => {
 
 通知去重通过 `notified` 标志位实现——`iq6()` 中先通过 `A3()` 原子地检查并设置 `notified: true`，只有首次成功设置的调用方才执行后续通知逻辑。
 
----
 
 ## 附录 A：Agent 系统源码定位索引
 
@@ -766,7 +760,6 @@ A3(taskId, setAppState, (state) => {
 | `dw6`（计数器初始化） | ~3960-3975 | tokenCount/toolUseCount |
 | `iq6`（完成通知） | ~3963-3972 | task-notification XML |
 
----
 
 ## 附录 B：术语表
 

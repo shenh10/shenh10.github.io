@@ -3,7 +3,6 @@
 
 > 本章对 Claude Code 中 MCP（Model Context Protocol，模型上下文协议）的完整集成架构进行深度逆向分析。MCP 是 Anthropic 定义的开放标准，旨在为 LLM 提供统一的外部工具与资源访问协议。在 Claude Code 中，MCP 子系统覆盖超过 30 个源文件的功能区域，涉及服务器发现、连接管理、传输层抽象、工具注册、资源系统、安全模型和插件生态。所有分析基于 `cli.js`（16667 行）源码逆向验证，辅以 `sdk-tools.d.ts` 公开类型交叉确认。
 
----
 
 ## 目录
 
@@ -27,7 +26,6 @@
 3. [演进思维实验](#3-演进思维实验)
 4. [验证策略](#4-验证策略)
 
----
 
 ## 1. 接口契约
 
@@ -203,7 +201,6 @@ if ("blob" in content) {
 2. 服务器 `type` 是否为 `"connected"`
 3. 服务器是否声明了对应能力（`tools` 或 `resources`）
 
----
 
 ## 2. 实现机制
 
@@ -923,7 +920,6 @@ var L47 = "notifications/claude/channel/permission";
 var QNK = "notifications/claude/channel/permission_request";
 ```
 
----
 
 ## 3. 演进思维实验
 
@@ -1036,7 +1032,6 @@ MCP 协议的设计遵循了几个关键的工程原则：
 
 5. **安全多层防御**：从服务器准入、工具权限、Hook 审计到传输加密，安全策略分布在多个独立层级，每层独立生效。
 
----
 
 ## 4. 验证策略
 
@@ -1097,6 +1092,5 @@ MCP 协议的设计遵循了几个关键的工程原则：
 - [ ] 确认插件系统中 `mcpServers` 字段与 MCPConnectionManager 的集成路径
 - [ ] 确认竞品工具检测列表（`UB1` 和 `iwz`）的完整性
 
----
 
 > **引用来源**：所有代码片段和架构分析均来自 `/opt/homebrew/lib/node_modules/@anthropic-ai/claude-code/cli.js`（v2.1.88，构建时间 2026-03-30T21:59:52Z）的逆向分析。混淆后的变量名（如 `bJ6`、`no6`、`hc6`、`$M`、`R78` 等）为 build 产物的实际标识符。
