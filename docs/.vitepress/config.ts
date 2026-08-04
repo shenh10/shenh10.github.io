@@ -29,6 +29,7 @@ export default withMermaid(defineConfig({
           text: '博客文章',
           items: [
             { text: '所有文章', link: '/blog/' },
+            { text: 'HuggingArch: Automating Model Architecture Analysis', link: '/blog/huggingarch' },
           ],
         },
       ],
@@ -87,6 +88,10 @@ export default withMermaid(defineConfig({
       message: 'Powered by VitePress',
       copyright: '© 2026 Shen Han',
     },
+  },
+
+  markdown: {
+    math: true,
   },
 
   mermaid: {},
