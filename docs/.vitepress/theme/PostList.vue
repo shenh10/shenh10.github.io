@@ -16,7 +16,9 @@ const items = computed(() =>
       lang.value === 'zh-CN' ? 'zh-CN' : 'en-US',
       { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' },
     ),
-    note: props.notes?.[p.url.split('/').pop() ?? ''] ?? p.description,
+    // loader urls carry the .html extension; the notes map is keyed by slug
+    note: props.notes?.[(p.url.split('/').pop() ?? '').replace(/\.html$/, '')]
+      ?? p.description,
   })),
 )
 </script>
