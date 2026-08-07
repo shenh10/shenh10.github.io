@@ -133,6 +133,7 @@ export default withMermaid(defineConfig({
                 { text: 'All posts', link: '/en/blog/' },
                 { text: 'HuggingArch: Automating Model Architecture Analysis', link: '/en/blog/huggingarch' },
                 { text: 'GPU-to-GPU Copy over PCIe', link: '/en/blog/gpu-d2d-pcie' },
+                { text: 'GPU Clock Throttling', link: '/en/blog/gpu-throttling' },
               ],
             },
           ],
