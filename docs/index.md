@@ -3,48 +3,63 @@ layout: home
 
 hero:
   name: "Shen Han"
-  text: "AI Infra / Large-Model Systems"
-  tagline: I build high-performance training and inference systems. Lately I've been making "what does this model cost to serve" an automatic, verifiable, reusable answer.
+  text: "LLM Inference · AI Compilers · GPU Performance"
+  tagline: I build the infrastructure that makes large models cheap to serve — and the tools that tell you, before you deploy, what serving them will cost.
   image:
     src: https://github.com/shenh10.png
     alt: Shen Han
   actions:
     - theme: brand
-      text: Read the blog
+      text: Writing
       link: /blog/
     - theme: alt
-      text: About me
+      text: Full CV
       link: /about
     - theme: alt
       text: GitHub
       link: https://github.com/shenh10
-
-features:
-  - title: HuggingArch
-    details: Give it a model that's open on HuggingFace and it works out the parameter count, KV cache, parallel sharding and inference throughput. A three-tier spec system, sympy symbolic algebra end to end, and a validation harness that pins the agent to ground truth.
-    link: /blog/huggingarch
-  - title: PaperCache
-    details: An AI-driven paper-reading blog — let an LLM read the papers for you. Deep learning, ML systems, and AI accelerators.
-    link: https://www.papercache.org/
-  - title: Claude Code Teardown
-    details: A systematic architectural teardown of claude-code v2.1.88 across 12 chapters — agent loop, tool system, permission engine, MCP integration. Written in Chinese.
-    link: /projects/claude-code/
 ---
-
-## What I'm working on
-
-**[HuggingArch](/blog/huggingarch)** — a harness for inference cost analysis. Hand it a HuggingFace model ID and it produces a validated architecture spec, then computes KV cache, parallel sharding, and prefill/decode throughput on top of it. The architecture itself is written by an agent, but every step is anchored to the checkpoint's real tensors, its `config.json`, and its forward source — an ablation shows that without those guards, an agent will confidently declare a broken spec valid.
-
-**[PaperCache](https://www.papercache.org/)** — let an LLM read the papers for you. Close readings in deep learning, ML systems, and AI accelerators, updated continuously.
-
-## Interests
-
-- Systems optimization and engineering practice for large-model pretraining and post-training
-- Efficient GPU utilization and performance tuning (memory, bandwidth, parallelism, operator fusion)
-- Distributed training and inference architecture (parallelism strategies, communication optimization, scheduling, fault tolerance)
 
 ## About
 
-Tsinghua University — Electronic Engineering (BSc) and the Institute for Interdisciplinary Information Sciences (MSc). Since then: computer vision at Horizon Robotics, then AI infrastructure at a GPU startup and at Kuaishou. Full background on the [about page](/about).
+I work on AI infrastructure: large-model inference, deep-learning compilers, and GPU performance engineering.
 
-[LinkedIn](https://www.linkedin.com/in/hanshe/) · [Zhihu](https://www.zhihu.com/people/han-shen-86) · [GitHub](https://github.com/shenh10)
+Most recently I led the LLM inference and AI compiler team at Kuaishou. On the compiler side that produced **KaiCompiler**, an OpenXLA-based compiler built from scratch and decoupled from TensorFlow, whose parallelism-first stream assignment brought 20–30% over TF2 XLA across dozens of production models; it runs in production for recommendation and advertising, and is being platformized as a pluggable training backend. Earlier on the same team, a full mixed-precision training stack — FP16 and BF16 automatic mixed precision for TensorFlow — improved throughput by close to 50% on typical workloads and retired 600+ GPU machines outright.
+
+On the inference side, the team delivered one of the industry's first production LLM deployments on AMD GPUs, at MFU parity with A800 — LLAMA 13B, 66B and 175B in service, which made the MI210 Kuaishou's primary inference part across dozens of core products. Getting there meant GEMM and attention kernel work, operator fusion, topology-aware AllReduce, compute-communication overlap, and an INT8 KV cache. Above the kernels, the team's optimization work was organized around MFU and MBU as the objective: paged-attention KV reservation, prefix caching and offloading, long context, prefill-decode disaggregation, and CPU/GPU hybrid inference.
+
+Before Kuaishou I built and led the AI framework team at VirtAI Tech, working on GPU virtualization (OrionX) — including the first live-migration scheme for virtual GPUs, and a batched-RPC transport that cut small-batch remote-inference overhead by two thirds under PyTorch. Earlier still I worked on computer vision at Horizon Robotics, on multi-object tracking and video detection, and on SDN and switch tooling at Cisco Systems in San Jose.
+
+I hold an M.S. in Computer Science and a B.S. in Electronic Engineering, both from Tsinghua University.
+
+## Research Interests
+
+- **Large-model inference** — MFU/MBU-driven optimization, KV cache and paged attention, prefix caching and offloading, prefill-decode disaggregation, long context
+- **AI compilers** — XLA/OpenXLA, graph optimization, operator fusion, code generation, stream assignment for parallelism
+- **GPU performance engineering** — mixed precision, GEMM and attention kernels, collective communication and topology, heterogeneous accelerators
+- **Cost modelling for inference** — making the arithmetic of deployment automatic, verifiable, and reusable
+
+## Current Work
+
+**[HuggingArch](/blog/huggingarch)** — a harness for inference cost analysis. Give it a model that is open on HuggingFace and it produces a validated architecture spec, then computes KV cache, parallel sharding, and prefill/decode throughput on top of it. The spec is written by an agent but anchored at every step to the checkpoint's real tensors, its `config.json`, and its forward source.
+
+**[PaperCache](https://www.papercache.org/)** — an AI-driven paper-reading blog covering deep learning, ML systems, and AI accelerators.
+
+## Selected Writing
+
+- [DeepSeek V3/R1 inference efficiency](/blog/ds-inference-1-throughput-ceiling), in three parts — a throughput ceiling from the paper alone, a layer-by-layer reverse-engineering of the published EP144 deployment, and a simulator generalizing it across device counts and hardware
+- [GPU clock throttling](/blog/gpu-throttling) — why a large GEMM never reaches a card's rated TFLOPS, measured across T4, A10, A800 and H800
+- [GPU-to-GPU copy over PCIe](/blog/gpu-d2d-pcie) — from `cudaMemcpyAsync` to a custom vectorized kernel, against NCCL
+
+## Talks
+
+- *Unlocking the Potential of the AI Compiler in Recommendation Systems* [S72642] — GTC 2025
+- *Compute-engine optimization for recommendation, search and advertising at Kuaishou* — DataFun Summit 2024
+
+## Publications
+
+Six papers in computer vision — multi-object tracking, video object detection, learned video compression — including an AAAI 2020 Spotlight. Listed in full on the [CV](/about#publications).
+
+---
+
+[LinkedIn](https://www.linkedin.com/in/hanshe/) · [Zhihu](https://www.zhihu.com/people/han-shen-86) · [GitHub](https://github.com/shenh10) · thushenhan@gmail.com

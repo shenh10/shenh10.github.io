@@ -75,7 +75,7 @@ export default withMermaid(defineConfig({
             ],
           },
           { text: 'PaperCache', link: 'https://www.papercache.org/' },
-          { text: 'About', link: '/about' },
+          { text: 'CV', link: '/about' },
         ],
 
         sidebar: {
@@ -123,7 +123,7 @@ export default withMermaid(defineConfig({
             ],
           },
           { text: 'PaperCache', link: 'https://www.papercache.org/' },
-          { text: '关于我', link: '/zh/about' },
+          { text: '简历', link: '/zh/about' },
         ],
 
         sidebar: {
