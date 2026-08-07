@@ -38,8 +38,7 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 - **2026.07** —— **Kimi K3** 发布 —— [技术报告](https://arxiv.org/abs/2607.24653)。
 - **2026.06** —— 加入 **Moonshot AI**，Member of Technical Staff。
 - **2025.09** —— 上线 [PaperCache](https://www.papercache.org/)，用 LLM 做论文精读而非摘要的博客——[背后的设计原则](/blog/papercache)。
-- **2025.08** —— DeepSeek 推理系列[第三篇](/blog/ds-inference-3-decode-generalization)：用模拟器在 H800 与 H20 上扫 decode 配置，说明官方的 EP144 并非唯一解。
-- **2025.03** —— 在 **GTC 2025** 讲 AI 编译器（[S72642](https://www.nvidia.com/en-us/on-demand/session/gtc25-s72642/)）；发布 DeepSeek 推理效率分析[第一篇](/blog/ds-inference-1-throughput-ceiling)与[第二篇](/blog/ds-inference-2-reverse-engineering)，率先在业内证明了 DeepSeek 在 H800/H20 上的部署上限。
+- **2025.03** —— 在 **GTC 2025** 讲 AI 编译器（[S72642](https://www.nvidia.com/en-us/on-demand/session/gtc25-s72642/)）；发布 [DeepSeek 推理效率分析系列](/blog/ds-inference-1-throughput-ceiling)，率先在业内证明了 DeepSeek 在 H800/H20 上的部署上限。
 - **2024.12** —— 写了 [GPU 降频](/blog/gpu-throttling) 与 [PCIE 上的 GPU D2D 拷贝](/blog/gpu-d2d-pcie)。
 - **2024** —— 在 **DataFun Summit 2024** 分享推搜广计算引擎优化实践。
 

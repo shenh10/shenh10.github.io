@@ -36,8 +36,7 @@ Lately I have been building [HuggingArch](/blog/huggingarch), a harness that mak
 - **2026.07** — **Kimi K3** released — [tech report](https://arxiv.org/abs/2607.24653).
 - **2026.06** — Joined **Moonshot AI** as a Member of Technical Staff.
 - **2025.09** — Launched [PaperCache](https://www.papercache.org/), a paper-reading blog built on LLM close reads rather than summaries — [the design principles behind it](/blog/papercache).
-- **2025.08** — [Part 3](/blog/ds-inference-3-decode-generalization) of the DeepSeek inference series: a simulator sweeping decode configurations across H800 and H20, showing the published EP144 is not the only good answer.
-- **2025.03** — Spoke on AI compilers at **GTC 2025** ([S72642](https://www.nvidia.com/en-us/on-demand/session/gtc25-s72642/)), and published [parts 1](/blog/ds-inference-1-throughput-ceiling) and [2](/blog/ds-inference-2-reverse-engineering) of the DeepSeek inference-efficiency series — the first public work to establish DeepSeek's deployment ceilings on H800 and H20.
+- **2025.03** — Spoke on AI compilers at **GTC 2025** ([S72642](https://www.nvidia.com/en-us/on-demand/session/gtc25-s72642/)), and published the [DeepSeek inference-efficiency series](/blog/ds-inference-1-throughput-ceiling) — the first public work to establish DeepSeek's deployment ceilings on H800 and H20.
 - **2024.12** — Wrote up [GPU clock throttling](/blog/gpu-throttling) and [GPU-to-GPU copy over PCIe](/blog/gpu-d2d-pcie).
 - **2024** — Spoke at **DataFun Summit 2024** on compute-engine optimization for recommendation, search and advertising.
 
