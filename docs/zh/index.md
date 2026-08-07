@@ -1,23 +1,27 @@
 ---
-layout: home
-
-hero:
-  name: "申晗"
-  tagline: Moonshot AI，AI 基础设施 —— 大模型推理、深度学习编译器、GPU 性能优化。
-  image:
-    src: https://github.com/shenh10.png
-    alt: 申晗
-  actions:
-    - theme: brand
-      text: 文章
-      link: /zh/blog/
-    - theme: alt
-      text: 关于
-      link: /zh/about
-    - theme: alt
-      text: GitHub
-      link: https://github.com/shenh10
+layout: page
+title: 申晗
+description: AI 基础设施——大模型推理、深度学习编译器、GPU 性能优化。
 ---
+
+<ProfileLayout
+  name="申晗"
+  title="Moonshot AI，AI 基础设施"
+  photo="https://github.com/shenh10.png"
+  interests-label="关注方向"
+  :interests="['大模型推理', 'AI 编译器', 'GPU 性能优化', '推理成本建模']"
+  education-label="教育背景"
+  :education="[
+    { degree: '计算机科学与技术 硕士', school: '清华大学', year: '2018' },
+    { degree: '电子工程 工学学士', school: '清华大学', year: '2015' },
+  ]"
+  :links="[
+    { text: '邮箱', href: 'mailto:thushenhan@gmail.com' },
+    { text: 'GitHub', href: 'https://github.com/shenh10' },
+    { text: 'LinkedIn', href: 'https://www.linkedin.com/in/hanshe/' },
+    { text: '知乎', href: 'https://www.zhihu.com/people/han-shen-86' },
+  ]"
+>
 
 ## 关于
 
@@ -36,13 +40,6 @@ hero:
 - **2024.12** —— 写了 [GPU 降频](/blog/gpu-throttling) 与 [PCIE 上的 GPU D2D 拷贝](/blog/gpu-d2d-pcie)。
 - **2024** —— 在 **DataFun Summit 2024** 分享推搜广计算引擎优化实践。
 
-## 关注方向
-
-- **大模型推理** —— 以 MFU/MBU 为目标的优化、KV cache 与 paged attention、prefix caching 与 offloading、PD 分离、长文本
-- **AI 编译器** —— XLA/OpenXLA、图优化、算子融合、代码生成、面向并行的流分配
-- **GPU 性能优化** —— 混合精度、GEMM 与 attention 算子、集合通信与拓扑、异构加速器
-- **推理成本建模** —— 让部署这笔账变得自动、可验证、可复用
-
 ## 精选写作
 
 - [DeepSeek V3/R1 推理效率分析](/blog/ds-inference-1-throughput-ceiling)（三篇）—— 只靠论文估出的吞吐上限、对官方 EP144 部署的逐层逆向工程、以及把结论泛化到不同设备数与硬件的模拟器
@@ -60,4 +57,5 @@ hero:
 
 欢迎来信 —— [thushenhan@gmail.com](mailto:thushenhan@gmail.com)
 
-[LinkedIn](https://www.linkedin.com/in/hanshe/) · [知乎](https://www.zhihu.com/people/han-shen-86) · [GitHub](https://github.com/shenh10)
+
+</ProfileLayout>

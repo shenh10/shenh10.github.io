@@ -1,23 +1,25 @@
 ---
-layout: home
-
-hero:
-  name: "Shen Han"
-  tagline: AI infrastructure at Moonshot AI — large-model inference, deep-learning compilers, GPU performance engineering.
-  image:
-    src: https://github.com/shenh10.png
-    alt: Shen Han
-  actions:
-    - theme: brand
-      text: Writing
-      link: /blog/
-    - theme: alt
-      text: About
-      link: /about
-    - theme: alt
-      text: GitHub
-      link: https://github.com/shenh10
+layout: page
+title: Shen Han
+description: AI infrastructure — large-model inference, deep-learning compilers, GPU performance engineering.
 ---
+
+<ProfileLayout
+  name="Shen Han"
+  title="AI Infrastructure at Moonshot AI"
+  photo="https://github.com/shenh10.png"
+  :interests="['LLM Inference', 'AI Compilers', 'GPU Performance', 'Cost Modelling']"
+  :education="[
+    { degree: 'M.S. in Computer Science', school: 'Tsinghua University', year: '2018' },
+    { degree: 'B.S. in Electronic Engineering', school: 'Tsinghua University', year: '2015' },
+  ]"
+  :links="[
+    { text: 'Email', href: 'mailto:thushenhan@gmail.com' },
+    { text: 'GitHub', href: 'https://github.com/shenh10' },
+    { text: 'LinkedIn', href: 'https://www.linkedin.com/in/hanshe/' },
+    { text: 'Zhihu', href: 'https://www.zhihu.com/people/han-shen-86' },
+  ]"
+>
 
 ## About
 
@@ -36,13 +38,6 @@ Lately I have been building [HuggingArch](/blog/huggingarch), a harness that mak
 - **2024.12** — Wrote up [GPU clock throttling](/blog/gpu-throttling) and [GPU-to-GPU copy over PCIe](/blog/gpu-d2d-pcie).
 - **2024** — Spoke at **DataFun Summit 2024** on compute-engine optimization for recommendation, search and advertising.
 
-## Research Interests
-
-- **Large-model inference** — MFU/MBU-driven optimization, KV cache and paged attention, prefix caching and offloading, prefill-decode disaggregation, long context
-- **AI compilers** — XLA/OpenXLA, graph optimization, operator fusion, code generation, stream assignment for parallelism
-- **GPU performance engineering** — mixed precision, GEMM and attention kernels, collective communication and topology, heterogeneous accelerators
-- **Cost modelling for inference** — making the arithmetic of deployment automatic, verifiable, and reusable
-
 ## Selected Writing
 
 - [DeepSeek V3/R1 inference efficiency](/blog/ds-inference-1-throughput-ceiling), in three parts — a throughput ceiling from the paper alone, a layer-by-layer reverse-engineering of the published EP144 deployment, and a simulator generalizing it across device counts and hardware
@@ -60,4 +55,5 @@ All posts are on the [blog](/blog/); background and publications are on the [abo
 
 Feel free to drop me a line — [thushenhan@gmail.com](mailto:thushenhan@gmail.com)
 
-[LinkedIn](https://www.linkedin.com/in/hanshe/) · [Zhihu](https://www.zhihu.com/people/han-shen-86) · [GitHub](https://github.com/shenh10)
+
+</ProfileLayout>
