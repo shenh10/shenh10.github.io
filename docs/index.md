@@ -3,8 +3,7 @@ layout: home
 
 hero:
   name: "Shen Han"
-  text: "LLM Inference · AI Compilers · GPU Performance"
-  tagline: I build the infrastructure that makes large models cheap to serve — and the tools that tell you, before you deploy, what serving them will cost.
+  tagline: AI infrastructure at Moonshot AI — large-model inference, deep-learning compilers, GPU performance engineering.
   image:
     src: https://github.com/shenh10.png
     alt: Shen Han

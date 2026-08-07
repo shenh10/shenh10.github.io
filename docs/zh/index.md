@@ -3,8 +3,7 @@ layout: home
 
 hero:
   name: "申晗"
-  text: "大模型推理 · AI 编译 · GPU 性能"
-  tagline: 做让大模型服务成本降下来的基础设施，以及在部署之前就能把这笔账算清楚的工具。
+  tagline: Moonshot AI，AI 基础设施 —— 大模型推理、深度学习编译器、GPU 性能优化。
   image:
     src: https://github.com/shenh10.png
     alt: 申晗
