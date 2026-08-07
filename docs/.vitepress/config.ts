@@ -86,9 +86,9 @@ export default withMermaid(defineConfig({
                 // newest first, matching the blog index
                 { text: 'HuggingArch: Automating Model Architecture Analysis', link: '/blog/huggingarch' },
                 { text: 'PaperCache: Close Reading of Papers with an LLM', link: '/blog/papercache' },
+                { text: 'DeepSeek Inference Efficiency (3): Decode Generalization', link: '/blog/ds-inference-3-decode-generalization' },
                 { text: 'DeepSeek Inference Efficiency (2): Reverse-Engineering', link: '/blog/ds-inference-2-reverse-engineering' },
                 { text: 'DeepSeek Inference Efficiency (1): Throughput Ceiling', link: '/blog/ds-inference-1-throughput-ceiling' },
-                { text: 'DeepSeek Inference Efficiency (3): Decode Generalization', link: '/blog/ds-inference-3-decode-generalization' },
                 { text: 'GPU Clock Throttling', link: '/blog/gpu-throttling' },
                 { text: 'GPU-to-GPU Copy over PCIe', link: '/blog/gpu-d2d-pcie' },
               ],
