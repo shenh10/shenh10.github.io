@@ -84,6 +84,7 @@ export default withMermaid(defineConfig({
               items: [
                 { text: '所有文章', link: '/blog/' },
                 { text: 'HuggingArch：让模型 arch 分析自动化', link: '/blog/huggingarch' },
+                { text: '手撸一下 GPU D2D 实现（PCIE 版）', link: '/blog/gpu-d2d-pcie' },
               ],
             },
           ],
