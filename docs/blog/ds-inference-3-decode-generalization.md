@@ -8,12 +8,12 @@ description: A simulator built on DeepGEMM, FlashMLA and torch, sweeping DP-EP a
 > Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/29540042383).
 
 ::: tip This is part 3 of 3
-[Part 1](/en/blog/ds-inference-1-throughput-ceiling) estimated a throughput ceiling from the V3 paper; [part 2](/en/blog/ds-inference-2-reverse-engineering) reverse-engineered DeepSeek's published EP144 deployment. This part generalizes that result across device counts, batch sizes and hardware.
+[Part 1](/blog/ds-inference-1-throughput-ceiling) estimated a throughput ceiling from the V3 paper; [part 2](/blog/ds-inference-2-reverse-engineering) reverse-engineered DeepSeek's published EP144 deployment. This part generalizes that result across device counts, batch sizes and hardware.
 :::
 
 ## 1. Introduction
 
-With the [reverse-engineering](/en/blog/ds-inference-2-reverse-engineering) done, there is enough data and method to answer two questions:
+With the [reverse-engineering](/blog/ds-inference-2-reverse-engineering) done, there is enough data and method to answer two questions:
 
 - How does the DP-EP device count affect throughput?
 - How would other hardware run DeepSeek V3/R1?
@@ -233,7 +233,7 @@ giving $b_\text{mla} \le 397$, for a per-GPU ceiling of 7940 tokens/s.
 
 $$\left(\frac{1.39\, b_\text{mla}}{1024 \times 148} + \frac{(2.79 - 1.39) b_\text{mla}}{1024 \times 296}\right) \times 1000 \times 61 \le 50$$
 
-giving $b_\text{mla} \le 59$, for a per-GPU ceiling of 1180 tokens/s. (This differs from the theoretical ceiling in [part 1](/en/blog/ds-inference-1-throughput-ceiling) because MLA is now accounted for as a BF16 implementation.)
+giving $b_\text{mla} \le 59$, for a per-GPU ceiling of 1180 tokens/s. (This differs from the theoretical ceiling in [part 1](/blog/ds-inference-1-throughput-ceiling) because MLA is now accounted for as a BF16 implementation.)
 
 Taking the maximum $b_\text{mla}$ for each card, and measuring effective KV cache utilization as $\text{kv\_utility} = \min(b_\text{mla}^\text{latency\_bound}, b_\text{mla}^\text{peak}) / b_\text{mla}^\text{peak}$:
 

@@ -19,7 +19,7 @@ Part 1 estimated a throughput ceiling from the V3 paper alone. This part rebuild
 
 ## 1. Introduction
 
-The [qualitative estimate](/en/blog/ds-inference-1-throughput-ceiling) in part 1 drew more interest than expected, along with a number of questions. As an exercise in bounding the problem it did its job — it ruled out some wildly optimistic ceilings — but as an estimate of DeepSeek R1's performance, now that the timeline data is public, it was too coarse. Two methodological problems:
+The [qualitative estimate](/blog/ds-inference-1-throughput-ceiling) in part 1 drew more interest than expected, along with a number of questions. As an exercise in bounding the problem it did its job — it ruled out some wildly optimistic ceilings — but as an estimate of DeepSeek R1's performance, now that the timeline data is public, it was too coarse. Two methodological problems:
 
 **a) Whether the bound is attainable**
 
@@ -300,7 +300,7 @@ Core MLA attention dominates decode, so it can no longer be overlapped with disp
 
 ## 3. Conclusion
 
-That is a reasonably complete decomposition of what DeepSeek has published. The generalization to other configurations turned out to be too much material for one post; it is the subject of [part 3](/en/blog/ds-inference-3-decode-generalization).
+That is a reasonably complete decomposition of what DeepSeek has published. The generalization to other configurations turned out to be too much material for one post; it is the subject of [part 3](/blog/ds-inference-3-decode-generalization).
 
 ## References
 

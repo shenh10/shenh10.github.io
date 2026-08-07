@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 
-// Chinese is the root locale, so every existing URL (/blog/…, /projects/…)
-// keeps working; English lives under /en/. The project teardowns are long-form
-// Chinese and are not translated — the English nav links straight at them.
+// English is the root locale — nearly all the writing here is in English —
+// with Chinese under /zh/. The project teardowns are long-form Chinese and are
+// not translated; they keep their unprefixed /projects/claude-code/ URLs and
+// both locales link straight at them.
 
 const claudeCodeSidebar = [
   {
@@ -58,32 +59,80 @@ export default withMermaid(defineConfig({
 
   locales: {
     root: {
-      label: '简体中文',
-      lang: 'zh-CN',
-      description: 'Shen Han 的个人博客与项目文档',
+      label: 'English',
+      lang: 'en-US',
+      description: "Shen Han's blog and project notes",
 
       themeConfig: {
         nav: [
-          { text: '首页', link: '/' },
-          { text: '博客', link: '/blog/' },
+          { text: 'Home', link: '/' },
+          { text: 'Blog', link: '/blog/' },
           {
-            text: '项目',
+            text: 'Projects',
             items: [
-              { text: '所有项目', link: '/projects/' },
-              { text: 'Claude Code 源码剖析', link: '/projects/claude-code/' },
+              { text: 'All projects', link: '/projects/' },
+              { text: 'Claude Code teardown (中文)', link: '/projects/claude-code/' },
             ],
           },
           { text: 'PaperCache', link: 'https://www.papercache.org/' },
-          { text: '关于我', link: '/about' },
+          { text: 'About', link: '/about' },
         ],
 
         sidebar: {
           '/blog/': [
             {
+              text: 'Posts',
+              items: [
+                { text: 'All posts', link: '/blog/' },
+                { text: 'HuggingArch: Automating Model Architecture Analysis', link: '/blog/huggingarch' },
+                { text: 'GPU-to-GPU Copy over PCIe', link: '/blog/gpu-d2d-pcie' },
+                { text: 'GPU Clock Throttling', link: '/blog/gpu-throttling' },
+                { text: 'DeepSeek Inference Efficiency (1): Throughput Ceiling', link: '/blog/ds-inference-1-throughput-ceiling' },
+                { text: 'DeepSeek Inference Efficiency (2): Reverse-Engineering', link: '/blog/ds-inference-2-reverse-engineering' },
+                { text: 'DeepSeek Inference Efficiency (3): Decode Generalization', link: '/blog/ds-inference-3-decode-generalization' },
+              ],
+            },
+          ],
+          '/projects/claude-code/': claudeCodeSidebar,
+        },
+
+        outline: { level: [2, 3], label: 'On this page' },
+
+        footer: {
+          message: 'Powered by VitePress',
+          copyright: '© 2026 Shen Han',
+        },
+      },
+    },
+
+    zh: {
+      label: '简体中文',
+      lang: 'zh-CN',
+      link: '/zh/',
+      description: 'Shen Han 的个人博客与项目文档',
+
+      themeConfig: {
+        nav: [
+          { text: '首页', link: '/zh/' },
+          { text: '博客', link: '/zh/blog/' },
+          {
+            text: '项目',
+            items: [
+              { text: '所有项目', link: '/zh/projects/' },
+              { text: 'Claude Code 源码剖析', link: '/projects/claude-code/' },
+            ],
+          },
+          { text: 'PaperCache', link: 'https://www.papercache.org/' },
+          { text: '关于我', link: '/zh/about' },
+        ],
+
+        sidebar: {
+          '/zh/blog/': [
+            {
               text: '博客文章',
               items: [
-                { text: '所有文章', link: '/blog/' },
-                { text: 'HuggingArch：让模型 arch 分析自动化', link: '/blog/huggingarch' },
+                { text: '所有文章', link: '/zh/blog/' },
+                { text: 'HuggingArch：让模型 arch 分析自动化', link: '/zh/blog/huggingarch' },
               ],
             },
           ],
@@ -96,54 +145,6 @@ export default withMermaid(defineConfig({
         darkModeSwitchLabel: '外观',
         returnToTopLabel: '返回顶部',
         langMenuLabel: '切换语言',
-
-        footer: {
-          message: 'Powered by VitePress',
-          copyright: '© 2026 Shen Han',
-        },
-      },
-    },
-
-    en: {
-      label: 'English',
-      lang: 'en-US',
-      link: '/en/',
-      description: "Shen Han's blog and project notes",
-
-      themeConfig: {
-        nav: [
-          { text: 'Home', link: '/en/' },
-          { text: 'Blog', link: '/en/blog/' },
-          {
-            text: 'Projects',
-            items: [
-              { text: 'All projects', link: '/en/projects/' },
-              { text: 'Claude Code teardown (中文)', link: '/projects/claude-code/' },
-            ],
-          },
-          { text: 'PaperCache', link: 'https://www.papercache.org/' },
-          { text: 'About', link: '/en/about' },
-        ],
-
-        sidebar: {
-          '/en/blog/': [
-            {
-              text: 'Posts',
-              items: [
-                { text: 'All posts', link: '/en/blog/' },
-                { text: 'HuggingArch: Automating Model Architecture Analysis', link: '/en/blog/huggingarch' },
-                { text: 'GPU-to-GPU Copy over PCIe', link: '/en/blog/gpu-d2d-pcie' },
-                { text: 'GPU Clock Throttling', link: '/en/blog/gpu-throttling' },
-                { text: 'DeepSeek Inference Efficiency (1): Throughput Ceiling', link: '/en/blog/ds-inference-1-throughput-ceiling' },
-                { text: 'DeepSeek Inference Efficiency (2): Reverse-Engineering', link: '/en/blog/ds-inference-2-reverse-engineering' },
-                { text: 'DeepSeek Inference Efficiency (3): Decode Generalization', link: '/en/blog/ds-inference-3-decode-generalization' },
-              ],
-            },
-          ],
-          '/projects/claude-code/': claudeCodeSidebar,
-        },
-
-        outline: { level: [2, 3], label: 'On this page' },
 
         footer: {
           message: 'Powered by VitePress',

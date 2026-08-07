@@ -1,9 +1,13 @@
-# 项目分析
+# Projects
 
-这里收录我对各类开源项目的源码分析与架构解读，每个项目独立成册。
+Source-level analysis and architecture walkthroughs of open-source projects, each as its own volume.
 
-## 项目列表
+::: tip Currently in Chinese only
+These teardowns run to tens of thousands of words and have not been translated yet. The links below go to the Chinese pages.
+:::
 
-### [Claude Code 源码剖析](/projects/claude-code/)
+## Volumes
 
-对 `@anthropic-ai/claude-code` v2.1.88 进行系统性的架构拆解与源码级分析，涵盖 Agent Loop、工具系统、权限引擎、MCP 协议集成等 12 个章节。
+### [Claude Code: A Source-Level Teardown](/projects/claude-code/) <Badge type="info" text="中文" />
+
+A systematic architectural and source-level analysis of `@anthropic-ai/claude-code` v2.1.88, across 12 chapters covering the agent loop, the tool system, the permission engine, MCP protocol integration, and more.

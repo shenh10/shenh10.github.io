@@ -1,31 +1,31 @@
-# 关于我
+# About Me
 
-我是一名从事 AI 基础设施与大模型工程的工程师，毕业于清华大学电子工程系与交叉信息研究院（本科/硕士）。长期关注高性能训练/推理系统的设计与实现。
+I'm an engineer working on AI infrastructure and large-model systems. I studied at Tsinghua University — Department of Electronic Engineering (BSc) and the Institute for Interdisciplinary Information Sciences (MSc) — and have spent most of my career on the design and implementation of high-performance training and inference systems.
 
-## 研究与关注方向
+## Interests
 
-- 大模型训练与后训练（pretrain / post-train）的系统优化与工程实践
-- GPU 资源高效利用与性能调优（显存 / 带宽 / 并行度 / 算子融合）
-- 分布式训练与推理架构（并行策略、通信优化、调度与容错）
-- 工程化与可复用性（可维护的基础设施、工具链与最佳实践积累）
+- Systems optimization and engineering practice for large-model pretraining and post-training
+- Efficient GPU utilization and performance tuning (memory, bandwidth, parallelism, operator fusion)
+- Distributed training and inference architecture (parallelism strategies, communication optimization, scheduling, fault tolerance)
+- Engineering for reuse — maintainable infrastructure, tooling, and accumulated best practice
 
-## 联系我
+## Contact
 
 - LinkedIn: [@hanshe](https://www.linkedin.com/in/hanshe/)
-- 知乎: [@han-shen-86](https://www.zhihu.com/people/han-shen-86)
+- Zhihu: [@han-shen-86](https://www.zhihu.com/people/han-shen-86)
 - GitHub: [@shenh10](https://github.com/shenh10)
 
-## 经历概览
+## Background
 
-| 时间 | 经历 |
+| Years | |
 |------|------|
-| 2010 - 2015 | 清华大学 电子工程系（本科） |
-| 2013 - 2015 | Cisco Systems, San Jose（实习/合作） |
-| 2015 - 2018 | 清华大学 交叉信息研究院（硕士） |
-| 2017 - 2020 | 地平线机器人（CV 算法工程师） |
-| 2020 - 2021 | GPU 创业公司（AI Infra） |
-| 2021 - 2025 | 快手（AI Infra） |
+| 2010 – 2015 | Tsinghua University, Electronic Engineering (BSc) |
+| 2013 – 2015 | Cisco Systems, San Jose (internship / collaboration) |
+| 2015 – 2018 | Tsinghua University, IIIS (MSc) |
+| 2017 – 2020 | Horizon Robotics (CV algorithm engineer) |
+| 2020 – 2021 | GPU startup (AI Infra) |
+| 2021 – 2025 | Kuaishou (AI Infra) |
 
-## 项目
+## Projects
 
-- [PaperCache](https://www.papercache.org/) — AI 驱动的论文阅读博客，让 LLM 帮你读论文
+- [PaperCache](https://www.papercache.org/) — an AI-driven paper-reading blog; let an LLM read the papers for you
