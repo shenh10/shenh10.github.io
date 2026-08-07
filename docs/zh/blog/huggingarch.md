@@ -1,4 +1,5 @@
 ---
+date: 2026-08-04
 title: "HuggingArch：让模型 arch 分析自动化"
 description: 用 harness 的思路让 LLM 推理算账自动化——只要模型在 HuggingFace 上开源，算账就应当是自动、可验证、可复用的。
 ---
