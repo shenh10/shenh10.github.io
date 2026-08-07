@@ -18,7 +18,11 @@ AI infrastructure — large-model inference, deep-learning compilers, GPU perfor
 
 ## Experience
 
-### Kuaishou — Head of LLM Inference & AI Compiler <Badge type="tip" text="2021 – 2025" />
+### Moonshot AI <Badge type="tip" text="2026 – present" />
+
+AI infrastructure.
+
+### Kuaishou — Head of LLM Inference & AI Compiler <Badge type="tip" text="2021 – 2026" />
 
 **Framework and compiler optimization for recommendation systems**
 

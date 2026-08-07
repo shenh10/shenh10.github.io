@@ -18,7 +18,11 @@ AI 基础设施——大模型推理、深度学习编译器、GPU 性能优化�
 
 ## 工作经历
 
-### 快手 —— LLM 推理 & AI 编译团队负责人 <Badge type="tip" text="2021 – 2025" />
+### Moonshot AI <Badge type="tip" text="2026 至今" />
+
+AI 基础设施。
+
+### 快手 —— LLM 推理 & AI 编译团队负责人 <Badge type="tip" text="2021 – 2026" />
 
 **推荐系统的框架及编译优化**
 
