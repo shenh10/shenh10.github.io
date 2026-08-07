@@ -34,8 +34,9 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 
 ## 近期动态
 
-- **2026.06** —— 加入 **Moonshot AI**，Member of Technical Staff。
 - **2026.08** —— 发布 [HuggingArch](/blog/huggingarch)：给一个 HuggingFace 上开源的模型，自动推导出经过校验的架构 spec，再在上面算 KV cache、并行切分与推理吞吐。
+- **2026.07** —— **Kimi K3** 发布 —— [技术报告](https://arxiv.org/abs/2607.24653)。
+- **2026.06** —— 加入 **Moonshot AI**，Member of Technical Staff。
 - **2025.09** —— 上线 [PaperCache](https://www.papercache.org/)，用 LLM 做论文精读而非摘要的博客——[背后的设计原则](/blog/papercache)。
 - **2025.03** —— 在 **GTC 2025** 讲 AI 编译器（[S72642](https://www.nvidia.com/en-us/on-demand/session/gtc25-s72642/)）；发布 [DeepSeek 推理效率分析系列](/blog/ds-inference-1-throughput-ceiling)，率先在业内证明了 DeepSeek 在 H800/H20 上的部署上限。
 - **2024.12** —— 写了 [GPU 降频](/blog/gpu-throttling) 与 [PCIE 上的 GPU D2D 拷贝](/blog/gpu-d2d-pcie)。
