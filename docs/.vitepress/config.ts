@@ -43,7 +43,7 @@ const claudeCodeSidebar = [
 ]
 
 export default withMermaid(defineConfig({
-  title: 'Shen Han',
+  title: 'Han Shen',
 
   themeConfig: {
     siteTitle: false,
@@ -61,7 +61,7 @@ export default withMermaid(defineConfig({
     root: {
       label: 'English',
       lang: 'en-US',
-      description: "Shen Han's blog and project notes",
+      description: "Han Shen's blog and project notes",
 
       themeConfig: {
         nav: [
@@ -75,7 +75,6 @@ export default withMermaid(defineConfig({
             ],
           },
           { text: 'PaperCache', link: 'https://www.papercache.org/' },
-          { text: 'About', link: '/about' },
         ],
 
         sidebar: {
@@ -84,12 +83,14 @@ export default withMermaid(defineConfig({
               text: 'Posts',
               items: [
                 { text: 'All posts', link: '/blog/' },
+                // newest first, matching the blog index
                 { text: 'HuggingArch: Automating Model Architecture Analysis', link: '/blog/huggingarch' },
-                { text: 'GPU-to-GPU Copy over PCIe', link: '/blog/gpu-d2d-pcie' },
-                { text: 'GPU Clock Throttling', link: '/blog/gpu-throttling' },
-                { text: 'DeepSeek Inference Efficiency (1): Throughput Ceiling', link: '/blog/ds-inference-1-throughput-ceiling' },
+                { text: 'PaperCache: Close Reading of Papers with an LLM', link: '/blog/papercache' },
                 { text: 'DeepSeek Inference Efficiency (2): Reverse-Engineering', link: '/blog/ds-inference-2-reverse-engineering' },
+                { text: 'DeepSeek Inference Efficiency (1): Throughput Ceiling', link: '/blog/ds-inference-1-throughput-ceiling' },
                 { text: 'DeepSeek Inference Efficiency (3): Decode Generalization', link: '/blog/ds-inference-3-decode-generalization' },
+                { text: 'GPU Clock Throttling', link: '/blog/gpu-throttling' },
+                { text: 'GPU-to-GPU Copy over PCIe', link: '/blog/gpu-d2d-pcie' },
               ],
             },
           ],
@@ -100,7 +101,7 @@ export default withMermaid(defineConfig({
 
         footer: {
           message: 'Powered by VitePress',
-          copyright: '© 2026 Shen Han',
+          copyright: '© 2026 Han Shen',
         },
       },
     },
@@ -109,7 +110,7 @@ export default withMermaid(defineConfig({
       label: '简体中文',
       lang: 'zh-CN',
       link: '/zh/',
-      description: 'Shen Han 的个人博客与项目文档',
+      description: '申晗的个人博客与项目文档',
 
       themeConfig: {
         nav: [
@@ -123,7 +124,6 @@ export default withMermaid(defineConfig({
             ],
           },
           { text: 'PaperCache', link: 'https://www.papercache.org/' },
-          { text: '关于', link: '/zh/about' },
         ],
 
         sidebar: {
@@ -148,7 +148,7 @@ export default withMermaid(defineConfig({
 
         footer: {
           message: 'Powered by VitePress',
-          copyright: '© 2026 Shen Han',
+          copyright: '© 2026 Han Shen',
         },
       },
     },

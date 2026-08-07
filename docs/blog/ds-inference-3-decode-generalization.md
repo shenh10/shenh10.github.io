@@ -1,12 +1,12 @@
 ---
-date: 2025-08-30
+date: 2025-03-17
 title: "DeepSeek V3/R1 Inference Efficiency (3): Generalizing the Decode Configuration"
 description: A simulator built on DeepGEMM, FlashMLA and torch, sweeping DP-EP and TP-DP-EP configurations on H800 and H20 — what device count, batch size, KV cache dtype and overlap scheme actually maximize throughput under a latency SLO.
 ---
 
 # DeepSeek V3/R1 Inference Efficiency (3): Generalizing the Decode Configuration
 
-> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/29540042383), August 30, 2025.
+> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/29540042383), March 17, 2025.
 
 ::: tip This is part 3 of 3
 [Part 1](/blog/ds-inference-1-throughput-ceiling) estimated a throughput ceiling from the V3 paper; [part 2](/blog/ds-inference-2-reverse-engineering) reverse-engineered DeepSeek's published EP144 deployment. This part generalizes that result across device counts, batch sizes and hardware.
