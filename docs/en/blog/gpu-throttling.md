@@ -15,8 +15,6 @@ The three figures that matter most when selecting GPU hardware are compute, memo
 
 The answer sets the ceiling on what optimization work can achieve on a given piece of hardware. Misjudge that ceiling and entire directions of optimization effort are aimed at the wrong thing.
 
-![](/blog/gpu-throttling/fig01.jpg)
-
 The culprit turns out to be power — a constraint that is easy to overlook until you measure it. The rest of this section introduces the hardware power figures that govern GPU performance.
 
 ### Clock Frequency
@@ -224,19 +222,19 @@ Start with two classic inference parts, the T4 and the A10. Both are modest in c
 
 **Power analysis, taking the T4**
 
-![](/blog/gpu-throttling/fig02.jpg)
+![](/blog/gpu-throttling/fig01.jpg)
 
 *T4 FP16 square-matrix GEMM performance*
 
 The largest test case reaches only 39 TFLOPS — 56% of rated peak. Here is the GPU state during that run, using `cublasHgemm`:
 
-![](/blog/gpu-throttling/fig03.jpg)
+![](/blog/gpu-throttling/fig02.jpg)
 
 *T4 cublasHgemm power and clock timeline*
 
 The x axis is time. Because this is a continuous monitored sweep with M, N and K growing over the run, the points where M changes are marked along it. There are two y axes: the primary carries GPU utilization, temperature and power; the secondary (yellow curve) carries the graphics clock.
 
-![](/blog/gpu-throttling/fig04.jpg)
+![](/blog/gpu-throttling/fig03.jpg)
 
 *T4 cublasHgemm clock-throttle-reason timeline*
 
@@ -244,17 +242,17 @@ From the throttle-reason timeline, the T4 begins asserting `sw_power_cap` at aro
 
 One oddity: `cublasLt` delivers noticeably lower GFLOPS than `cublasHgemm` and `cublasGemmEx` between M = 768 and M = 2048. Its power and clock timeline shows a similar magnitude of downclocking over that range, but each shape is preceded by a tuning phase, and different algorithms trigger throttling to different degrees — which may interfere with `cublasLt`'s algorithm selection. The baseline temperature was also higher during this run than during the `cublasHgemm` run, so I cannot say for certain whether that contributed.
 
-![](/blog/gpu-throttling/fig05.jpg)
+![](/blog/gpu-throttling/fig04.jpg)
 
 *T4 cublasLt with algorithm tuning — power and clock timeline*
 
 The same method applied to the A10:
 
-![](/blog/gpu-throttling/fig06.jpg)
+![](/blog/gpu-throttling/fig05.jpg)
 
 *A10 FP16 square-matrix GEMM performance*
 
-![](/blog/gpu-throttling/fig07.jpg)
+![](/blog/gpu-throttling/fig06.jpg)
 
 *A10 cublasHgemm power and clock timeline*
 
@@ -286,11 +284,11 @@ Now the reference parts of the large-model era: A800 SXM 80G, A800 PCIe 80G, and
 
 FP16 supports both FP32 and FP16 accumulators, so both call paths were tested; on Ampere the two deliver identical throughput.
 
-![](/blog/gpu-throttling/fig08.jpg)
+![](/blog/gpu-throttling/fig07.jpg)
 
 *A800 SXM FP16 square-matrix GEMM performance*
 
-![](/blog/gpu-throttling/fig09.jpg)
+![](/blog/gpu-throttling/fig08.jpg)
 
 *A800 SXM cublasHgemm power and clock timeline*
 
