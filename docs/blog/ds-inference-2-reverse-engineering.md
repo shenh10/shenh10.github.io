@@ -1,11 +1,12 @@
 ---
+date: 2025-03-24
 title: "DeepSeek V3/R1 Inference Efficiency (2): Reverse-Engineering the Production Deployment"
 description: Layer-by-layer profiling of DeepSeek's published EP144 setup — prefill and decode FLOPs, per-operator timings, MFU, and the overlap schedule that follows from them.
 ---
 
 # DeepSeek V3/R1 Inference Efficiency (2): Reverse-Engineering the Production Deployment
 
-> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/29841050824).
+> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/29841050824), March 24, 2025.
 
 ::: tip This is part 2 of 3
 Part 1 estimated a throughput ceiling from the V3 paper alone. This part rebuilds the estimate against everything DeepSeek has since published. Part 3 generalizes the result to other configurations.

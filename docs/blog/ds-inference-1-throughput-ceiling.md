@@ -1,11 +1,12 @@
 ---
+date: 2025-03-17
 title: "DeepSeek V3/R1 Inference Efficiency (1): A Back-of-the-Envelope Decoding Throughput Ceiling"
 description: Before DeepSeek published its inference-system numbers, how close could you get from the V3 paper alone? A memory-and-compute budget for Attention DP + MoE EP, and what it says about the achievable tokens/s per H800.
 ---
 
 # DeepSeek V3/R1 Inference Efficiency (1): A Back-of-the-Envelope Decoding Throughput Ceiling
 
-> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/27292649125).
+> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/27292649125), March 17, 2025.
 
 ::: tip This is part 1 of 3
 The series follows the analysis as it developed: part 1 is a coarse order-of-magnitude estimate from the V3 paper's parameters alone; parts 2 and 3 refine it quantitatively against the figures DeepSeek subsequently published. Precision improves substantially across the three, so anyone interested in the topic should read through to part 3 — several questions raised about the accuracy of part 1 are analysed and corrected there.

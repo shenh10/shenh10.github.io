@@ -1,11 +1,12 @@
 ---
+date: 2024-12-12
 title: "GPU-to-GPU Copy over PCIe: From cudaMemcpyAsync to a Custom Kernel"
 description: How much bandwidth can a device-to-device copy actually reach between two GPUs on a PCIe topology? Four implementations measured on A800 PCIe and RTX 4090, and compared against NCCL.
 ---
 
 # GPU-to-GPU Copy over PCIe: From cudaMemcpyAsync to a Custom Kernel
 
-> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/2847929235).
+> Originally published in Chinese on [Zhihu](https://zhuanlan.zhihu.com/p/2847929235), December 12, 2024.
 
 ## 1. Introduction
 
