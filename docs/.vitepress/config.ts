@@ -74,7 +74,6 @@ export default withMermaid(defineConfig({
               { text: 'Claude Code teardown (中文)', link: '/projects/claude-code/' },
             ],
           },
-          { text: 'PaperCache', link: 'https://www.papercache.org/' },
         ],
 
         sidebar: {
@@ -123,7 +122,6 @@ export default withMermaid(defineConfig({
               { text: 'Claude Code 源码剖析', link: '/projects/claude-code/' },
             ],
           },
-          { text: 'PaperCache', link: 'https://www.papercache.org/' },
         ],
 
         sidebar: {
