@@ -1,6 +1,8 @@
 ---
 date: 2025-03-24
 title: "DeepSeek V3/R1 Inference Efficiency (2): Reverse-Engineering the Production Deployment"
+short: "DeepSeek Inference Efficiency (2): Reverse-Engineering"
+titleZh: "DeepSeek 推理效率分析（2）：满血版逆向工程"
 description: Layer-by-layer profiling of DeepSeek's published EP144 setup — prefill and decode FLOPs, per-operator timings, MFU, and the overlap schedule that follows from them.
 ---
 

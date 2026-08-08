@@ -1,6 +1,8 @@
 ---
 date: 2024-12-21
 title: "GPU Clock Throttling: Why You Never Reach Peak FLOPS"
+short: "GPU Clock Throttling"
+titleZh: "聊一聊英伟达 GPU 的降频问题"
 description: When a large GEMM falls short of a GPU's rated TFLOPS, the vendor library is usually not the problem — the power budget is. Measured on T4, A10, A800 SXM/PCIe and H800 SXM.
 ---
 

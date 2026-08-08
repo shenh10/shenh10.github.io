@@ -1,6 +1,8 @@
 ---
 date: 2025-09-05
 title: "PaperCache: Close Reading of Papers with an LLM"
+short: "PaperCache"
+titleZh: "PaperCache：用 LLM 精读论文"
 description: A paper-reading blog built on LLM close reads rather than summaries — why existing tools did not fit, and the seven design principles behind it.
 ---
 

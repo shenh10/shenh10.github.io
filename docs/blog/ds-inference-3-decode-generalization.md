@@ -1,6 +1,8 @@
 ---
 date: 2025-03-30
 title: "DeepSeek V3/R1 Inference Efficiency (3): Generalizing the Decode Configuration"
+short: "DeepSeek Inference Efficiency (3): Decode Generalization"
+titleZh: "DeepSeek 推理效率分析（3）：Decode 配置泛化"
 description: A simulator built on DeepGEMM, FlashMLA and torch, sweeping DP-EP and TP-DP-EP configurations on H800 and H20 — what device count, batch size, KV cache dtype and overlap scheme actually maximize throughput under a latency SLO.
 ---
 

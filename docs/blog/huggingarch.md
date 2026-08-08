@@ -1,6 +1,8 @@
 ---
 date: 2026-08-04
 title: "HuggingArch: Automating Model Architecture Analysis"
+short: "HuggingArch"
+titleZh: "HuggingArch：让模型 arch 分析自动化"
 description: A harness that makes LLM inference cost analysis automatic, verifiable, and reusable — as long as the model is open on HuggingFace.
 ---
 

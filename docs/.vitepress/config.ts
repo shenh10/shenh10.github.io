@@ -1,5 +1,68 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
+import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const DOCS = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+// Both blog sidebars are derived from the posts themselves, so adding a post
+// is writing the post. Hand-maintained lists had already drifted — the Chinese
+// one listed two of seven, and neither was in date order.
+//
+// Each post declares `short` (English sidebar label) and `titleZh` (Chinese),
+// since full titles are too long for a sidebar and the Chinese ones are not
+// translations of the English. A one-field frontmatter read is enough here; no
+// need to pull in a parser.
+function readPosts() {
+  const dir = join(DOCS, 'blog')
+  const field = (src: string, key: string) => {
+    const m = src.match(new RegExp(`^${key}:\\s*"?(.+?)"?\\s*$`, 'm'))
+    return m ? m[1] : ''
+  }
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.md') && f !== 'index.md')
+    .map((f) => {
+      const slug = f.replace(/\.md$/, '')
+      const head = readFileSync(join(dir, f), 'utf-8').split('---')[1] ?? ''
+      return {
+        slug,
+        date: field(head, 'date'),
+        title: field(head, 'title'),
+        short: field(head, 'short'),
+        titleZh: field(head, 'titleZh'),
+        hasZh: existsSync(join(DOCS, 'zh', 'blog', f)),
+      }
+    })
+    .filter((p) => p.date)
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+}
+
+const posts = readPosts()
+
+const blogSidebarEn = [
+  {
+    text: 'Posts',
+    items: [
+      { text: 'All posts', link: '/blog/' },
+      ...posts.map((p) => ({ text: p.short || p.title, link: `/blog/${p.slug}` })),
+    ],
+  },
+]
+
+// a post links at its Chinese version when there is one, the English otherwise
+const blogSidebarZh = [
+  {
+    text: '博客文章',
+    items: [
+      { text: '所有文章', link: '/zh/blog/' },
+      ...posts.map((p) => ({
+        text: p.titleZh || p.short || p.title,
+        link: p.hasZh ? `/zh/blog/${p.slug}` : `/blog/${p.slug}`,
+      })),
+    ],
+  },
+]
 
 // English is the root locale — nearly all the writing here is in English —
 // with Chinese under /zh/. The project teardowns are long-form Chinese and are
@@ -77,22 +140,7 @@ export default withMermaid(defineConfig({
         ],
 
         sidebar: {
-          '/blog/': [
-            {
-              text: 'Posts',
-              items: [
-                { text: 'All posts', link: '/blog/' },
-                // newest first, matching the blog index
-                { text: 'HuggingArch: Automating Model Architecture Analysis', link: '/blog/huggingarch' },
-                { text: 'PaperCache: Close Reading of Papers with an LLM', link: '/blog/papercache' },
-                { text: 'DeepSeek Inference Efficiency (3): Decode Generalization', link: '/blog/ds-inference-3-decode-generalization' },
-                { text: 'DeepSeek Inference Efficiency (2): Reverse-Engineering', link: '/blog/ds-inference-2-reverse-engineering' },
-                { text: 'DeepSeek Inference Efficiency (1): Throughput Ceiling', link: '/blog/ds-inference-1-throughput-ceiling' },
-                { text: 'GPU Clock Throttling', link: '/blog/gpu-throttling' },
-                { text: 'GPU-to-GPU Copy over PCIe', link: '/blog/gpu-d2d-pcie' },
-              ],
-            },
-          ],
+          '/blog/': blogSidebarEn,
           '/projects/claude-code/': claudeCodeSidebar,
         },
 
@@ -125,22 +173,7 @@ export default withMermaid(defineConfig({
         ],
 
         sidebar: {
-          '/zh/blog/': [
-            {
-              // newest first; posts without a Chinese version link at the English one
-              text: '博客文章',
-              items: [
-                { text: '所有文章', link: '/zh/blog/' },
-                { text: 'HuggingArch：让模型 arch 分析自动化', link: '/zh/blog/huggingarch' },
-                { text: 'PaperCache：用 LLM 精读论文', link: '/blog/papercache' },
-                { text: 'DeepSeek 推理效率分析（3）：Decode 配置泛化', link: '/blog/ds-inference-3-decode-generalization' },
-                { text: 'DeepSeek 推理效率分析（2）：满血版逆向工程', link: '/blog/ds-inference-2-reverse-engineering' },
-                { text: 'DeepSeek 推理效率分析（1）：吞吐极限估计', link: '/blog/ds-inference-1-throughput-ceiling' },
-                { text: '聊一聊英伟达 GPU 的降频问题', link: '/blog/gpu-throttling' },
-                { text: '手撸一下 GPU D2D 实现（PCIE 版）', link: '/blog/gpu-d2d-pcie' },
-              ],
-            },
-          ],
+          '/zh/blog/': blogSidebarZh,
           '/projects/claude-code/': claudeCodeSidebar,
         },
 
