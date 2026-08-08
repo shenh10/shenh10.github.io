@@ -131,10 +131,10 @@ export default withMermaid(defineConfig({
           { text: 'Home', link: '/' },
           { text: 'Blog', link: '/blog/' },
           {
-            text: 'Projects',
+            text: 'Teardowns',
             items: [
-              { text: 'All projects', link: '/projects/' },
-              { text: 'Claude Code teardown (中文)', link: '/projects/claude-code/' },
+              { text: 'All teardowns', link: '/projects/' },
+              { text: 'Claude Code (中文)', link: '/projects/claude-code/' },
             ],
           },
         ],
@@ -164,9 +164,9 @@ export default withMermaid(defineConfig({
           { text: '首页', link: '/zh/' },
           { text: '博客', link: '/zh/blog/' },
           {
-            text: '项目',
+            text: '源码剖析',
             items: [
-              { text: '所有项目', link: '/zh/projects/' },
+              { text: '所有剖析', link: '/zh/projects/' },
               { text: 'Claude Code 源码剖析', link: '/projects/claude-code/' },
             ],
           },

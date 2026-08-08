@@ -1,4 +1,4 @@
-# Projects
+# Teardowns
 
 Source-level analysis and architecture walkthroughs of open-source projects, each as its own volume.
 
