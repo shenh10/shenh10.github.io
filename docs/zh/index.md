@@ -7,7 +7,7 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 <ProfileLayout
   name="申晗"
   title="Member of Technical Staff，Moonshot AI"
-  photo="https://github.com/shenh10.png"
+  photo="/portrait.jpg"
   interests-label="关注方向"
   :interests="['大模型推理', 'RL 基础设施', 'AI 编译器', 'GPU 性能优化', '推理成本建模']"
   education-label="教育背景"

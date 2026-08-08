@@ -7,7 +7,7 @@ description: AI infrastructure — large-model inference, deep-learning compiler
 <ProfileLayout
   name="Han Shen"
   title="Member of Technical Staff, Moonshot AI"
-  photo="https://github.com/shenh10.png"
+  photo="/portrait.jpg"
   :interests="['LLM Inference', 'RL Infrastructure', 'AI Compilers', 'GPU Performance', 'Cost Modelling']"
   :education="[
     { degree: 'M.S. in Computer Science', school: 'Tsinghua University', year: '2018' },
