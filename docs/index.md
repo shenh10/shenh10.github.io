@@ -28,7 +28,7 @@ Hi 👋 I work on AI infrastructure at **Moonshot AI** — large-model inference
 
 Before Moonshot I led the LLM inference and AI compiler team at **Kuaishou**, where the work spanned inference systems for large models and a compiler for recommendation workloads. Earlier I led the AI framework team at **VirtAI Tech**, working on GPU virtualization; before that, computer vision at **Horizon Robotics**, and networking software at **Cisco Systems** in San Jose. I hold an M.S. in Computer Science and a B.S. in Electronic Engineering, both from **Tsinghua University**.
 
-Lately I have been building [HuggingArch](/blog/huggingarch), a harness that makes the arithmetic of inference cost automatic and verifiable — which is also why most of what I write here is arithmetic: what a deployment actually costs, where the bound really is, and how far a card's rated numbers are from what you can reach.
+Lately I have been building [HuggingArch](/blog/huggingarch), a harness that makes the arithmetic of inference cost automatic and verifiable.
 
 ## Latest News
 

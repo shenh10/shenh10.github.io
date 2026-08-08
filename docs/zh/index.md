@@ -30,7 +30,7 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 
 来 Moonshot 之前，我在**快手**负责 LLM 推理与 AI 编译团队，工作横跨大模型推理系统与面向推荐场景的编译器。更早在**趋动科技**搭建并领导 AI framework 团队，做 GPU 虚拟化；再往前在**地平线机器人**做计算机视觉，在 **Cisco Systems**（San Jose）做网络软件。清华大学计算机科学与技术硕士、电子工程系工学学士。
 
-最近在做 [HuggingArch](/blog/huggingarch)，一套让推理算账自动化、可验证的 harness——这也是这里的文章大多在算账的原因：一套部署到底要花多少、瓶颈究竟卡在哪、硬件标称的数字离实际可达还有多远。
+最近在做 [HuggingArch](/blog/huggingarch)，一套让推理算账自动化、可验证的 harness。
 
 ## 近期动态
 
