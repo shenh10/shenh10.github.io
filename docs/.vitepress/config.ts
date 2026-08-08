@@ -127,10 +127,17 @@ export default withMermaid(defineConfig({
         sidebar: {
           '/zh/blog/': [
             {
+              // newest first; posts without a Chinese version link at the English one
               text: '博客文章',
               items: [
                 { text: '所有文章', link: '/zh/blog/' },
                 { text: 'HuggingArch：让模型 arch 分析自动化', link: '/zh/blog/huggingarch' },
+                { text: 'PaperCache：用 LLM 精读论文', link: '/blog/papercache' },
+                { text: 'DeepSeek 推理效率分析（3）：Decode 配置泛化', link: '/blog/ds-inference-3-decode-generalization' },
+                { text: 'DeepSeek 推理效率分析（2）：满血版逆向工程', link: '/blog/ds-inference-2-reverse-engineering' },
+                { text: 'DeepSeek 推理效率分析（1）：吞吐极限估计', link: '/blog/ds-inference-1-throughput-ceiling' },
+                { text: '聊一聊英伟达 GPU 的降频问题', link: '/blog/gpu-throttling' },
+                { text: '手撸一下 GPU D2D 实现（PCIE 版）', link: '/blog/gpu-d2d-pcie' },
               ],
             },
           ],
