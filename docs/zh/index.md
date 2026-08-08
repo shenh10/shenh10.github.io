@@ -61,17 +61,6 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 - [*Unlocking the Potential of the AI Compiler in Recommendation Systems*](https://www.nvidia.com/en-us/on-demand/session/gtc25-s72642/) [S72642] —— GTC 2025
 - *快手推搜广计算引擎优化实践* —— DataFun Summit 2024
 
-## 论文
-
-完整列表见 [Google Scholar](https://scholar.google.com/citations?user=IOYczjUAAAAJ)。
-
-- Tao Hu, Lichao Huang, **Han Shen**. *Multi-object Tracking via End-to-end Tracklet Searching and Ranking.* CoRR abs/2003.02795, 2020.
-- Haojie Liu, **Han Shen**, Lichao Huang, Ming Lu, Tong Chen, Zhan Ma. *Learned Video Compression via Joint Spatial-Temporal Correlation Exploration.* AAAI 2020 (Spotlight).
-- Tao Hu, Lichao Huang, Xianming Liu, **Han Shen**. *Real Time Visual Tracking using Spatial-Aware Temporal Aggregation Network.* CoRR abs/1908.00692, 2019.
-- Hao Luo, Lichao Huang, **Han Shen**, Yuan Li, Chang Huang, Xinggang Wang. *Object Detection in Video with Spatial-Temporal Context Aggregation.* CoRR abs/1907.04988, 2019.
-- Qiang Zhou, Zilong Huang, Lichao Huang, Yongchao Gong, **Han Shen**, Chang Huang, Wenyu Liu, Xinggang Wang. *Proposal, Tracking and Segmentation (PTS): A Cascaded Network for Video Object Segmentation.* CVPR Workshop 2019.
-- **Han Shen**, Lichao Huang, Chang Huang, Wei Xu. *Tracklet Association Tracker: An End-to-End Learning-based Association Approach for Multi-Object Tracking.* CoRR abs/1808.01562, 2018.
-
 ---
 
 欢迎来信 —— [thushenhan@gmail.com](mailto:thushenhan@gmail.com)
