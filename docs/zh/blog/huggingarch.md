@@ -664,7 +664,7 @@ HuggingArch 仍是一个持续演进的脚手架，接下来几个方向：
 
 ```bibtex
 @misc{shen2026huggingarch,
-  author       = {Han Shen},
+  author       = {Shen, Han},
   title        = {HuggingArch: Automating Model Architecture Analysis},
   year         = {2026},
   howpublished = {\url{https://shenhan.cc/blog/huggingarch}},
