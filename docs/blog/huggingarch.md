@@ -658,5 +658,19 @@ This is an open, side-project-style project. Stars are welcome, and so are devel
 
 For getting started and the code structure, see the repo's `docs/` (`README.md` is the map of the layers); for mechanism details, see the individual deep-dives.
 
+## Citation
+
+If this project or post helps your work, you can cite it as:
+
+```bibtex
+@misc{shen2026huggingarch,
+  author       = {Shen, Han},
+  title        = {HuggingArch: Automating Model Architecture Analysis},
+  year         = {2026},
+  howpublished = {\url{https://shenhan.cc/blog/huggingarch}},
+  note         = {Code: \url{https://github.com/shenh10/HuggingArch}}
+}
+```
+
 ## Acknowledgments
 Thanks to my advisor Wei Xu for sponsoring the H100s and 4090s, which let an over-age graduate running on pure passion keep this project going to this day (a salute to an advisor who's a programmer at heart! Where else do you find an advisor who helps run your servers and fix your bugs?). And thanks to my friends in the hj carpool for sharing the ride: I burned through a truly enormous number of tokens and freeloaded off all of you :D.

@@ -658,5 +658,19 @@ HuggingArch 仍是一个持续演进的脚手架，接下来几个方向：
 
 上手路径与代码结构见仓库的 `docs/`（`README.md` 是分层地图），机制细节见各篇 deep-dive。
 
+## 引用
+
+如果这个项目或这篇文章对你有帮助，可以这样引用：
+
+```bibtex
+@misc{shen2026huggingarch,
+  author       = {Shen, Han},
+  title        = {HuggingArch: Automating Model Architecture Analysis},
+  year         = {2026},
+  howpublished = {\url{https://shenhan.cc/blog/huggingarch}},
+  note         = {Code: \url{https://github.com/shenh10/HuggingArch}}
+}
+```
+
 ## 致谢
 感谢导师徐葳赞助的H100和4090，让为爱发电的大龄毕业生有机会把这个项目坚持做到现在（致敬程序员本色的导师！上哪找帮忙运维服务器修bug的好导师）。感谢 hj 车一起拼车的小伙伴，猛烧了巨多token，薅了大家的羊毛 ：D。
