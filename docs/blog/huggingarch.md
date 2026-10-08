@@ -664,7 +664,7 @@ If this project or post helps your work, you can cite it as:
 
 ```bibtex
 @misc{shen2026huggingarch,
-  author       = {Shen, Han},
+  author       = {Han Shen},
   title        = {HuggingArch: Automating Model Architecture Analysis},
   year         = {2026},
   howpublished = {\url{https://shenhan.cc/blog/huggingarch}},
