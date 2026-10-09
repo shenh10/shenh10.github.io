@@ -30,11 +30,11 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 
 来 Moonshot 之前，我在**快手**负责 LLM 推理与 AI 编译团队，工作横跨大模型推理系统与面向推荐场景的编译器。更早在**趋动科技**搭建并领导 AI framework 团队，做 GPU 虚拟化；再往前在**地平线机器人**做计算机视觉，在 **Cisco Systems**（San Jose）做网络软件。清华大学计算机科学与技术硕士、电子工程系工学学士。
 
-最近在做 [HuggingArch](/blog/huggingarch)，一套让推理算账自动化、可验证的 harness。
+最近在做 [HuggingArch](/zh/blog/huggingarch)，一套让推理算账自动化、可验证的 harness。
 
 ## 近期动态
 
-- **2026.08** —— 发布 [HuggingArch](/blog/huggingarch)：给一个 HuggingFace 上开源的模型，自动推导出经过校验的架构 spec，再在上面算 KV cache、并行切分与推理吞吐。
+- **2026.08** —— 发布 [HuggingArch](/zh/blog/huggingarch)：给一个 HuggingFace 上开源的模型，自动推导出经过校验的架构 spec，再在上面算 KV cache、并行切分与推理吞吐。
 - **2026.07** —— **Kimi K3** 发布 —— [技术报告](https://arxiv.org/abs/2607.24653)。
 - **2026.06** —— 加入 **Moonshot AI**，Member of Technical Staff。
 - **2025.09** —— 上线 [PaperCache](https://www.papercache.org/)，用 LLM 做论文精读而非摘要的博客——[背后的设计原则](/blog/papercache)。
@@ -52,7 +52,7 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 
 ## 项目
 
-- **[HuggingArch](/blog/huggingarch)** —— 让 LLM 推理算账自动、可验证、可复用的 harness。
+- **[HuggingArch](/zh/blog/huggingarch)** —— 让 LLM 推理算账自动、可验证、可复用的 harness。
 - **[PaperCache](https://www.papercache.org/)** —— 用 LLM 做论文精读的博客，覆盖机器学习系统、大模型与 AI 加速器。
 - **[DeepSeek_Simulator](https://github.com/shenh10/DeepSeek_Simulator)** —— 基于 DeepGEMM、FlashMLA 与 torch 的 decode 配置模拟器。
 
