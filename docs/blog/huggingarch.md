@@ -673,4 +673,5 @@ If this project or post helps your work, you can cite it as:
 ```
 
 ## Acknowledgments
-Thanks to my advisor Wei Xu for sponsoring the H100s and 4090s, which let an over-age graduate running on pure passion keep this project going to this day (a salute to an advisor who's a programmer at heart! Where else do you find an advisor who helps run your servers and fix your bugs?). And thanks to my friends in the hj carpool for sharing the ride: I burned through a truly enormous number of tokens and freeloaded off all of you :D.
+
+I thank my advisor, Prof. Wei Xu, for providing the H100 and RTX 4090 GPUs this work ran on, and for his hands-on support in keeping those machines running. This project would not have reached its current form without him.
