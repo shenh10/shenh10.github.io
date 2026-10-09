@@ -32,6 +32,7 @@ Lately I have been building [HuggingArch](/blog/huggingarch), a harness that mak
 
 ## Latest News
 
+- **2026.10** — Rewrote the [HuggingArch post](/blog/huggingarch) for the current system: sharding that propagates along the graph, a measured Kernel Bench, and designing models in the Playground — swap MLA for DSA in DeepSeek-V3 and see the whole model's cost change.
 - **2026.08** — Released [HuggingArch](/blog/huggingarch): give it any model open on HuggingFace and it derives a validated architecture spec, then computes KV cache, parallel sharding and inference throughput on top of it.
 - **2026.07** — **Kimi K3** released — [tech report](https://arxiv.org/abs/2607.24653).
 - **2026.06** — Joined **Moonshot AI** as a Member of Technical Staff.

@@ -34,6 +34,7 @@ description: AI 基础设施——大模型推理、深度学习编译器、GPU 
 
 ## 近期动态
 
+- **2026.10** —— 重写 [HuggingArch 博客](/zh/blog/huggingarch)，对应现在的系统：沿图传播的自动并行、实测校准的 Kernel Bench，以及在 Playground 里设计模型——把 DeepSeek-V3 的 MLA 换成 DSA，整个模型的成本怎么变一目了然。
 - **2026.08** —— 发布 [HuggingArch](/zh/blog/huggingarch)：给一个 HuggingFace 上开源的模型，自动推导出经过校验的架构 spec，再在上面算 KV cache、并行切分与推理吞吐。
 - **2026.07** —— **Kimi K3** 发布 —— [技术报告](https://arxiv.org/abs/2607.24653)。
 - **2026.06** —— 加入 **Moonshot AI**，Member of Technical Staff。
