@@ -64,10 +64,13 @@ Real-World GPU Kernels Against Hardware Limits](https://arxiv.org/pdf/2603.19173
 $$T_{\mathrm{SOL}} =
 \max\left(
 \frac{\text{Total FLOPs}}{\text{Compute Throughput}},
-\frac{\text{Total Fused Bytes}}{\text{Memory Bandwidth}}
+\frac{\text{Total Fused Bytes}}{\text{Memory Bandwidth}},
+\frac{\text{Comm Bytes}}{\text{Interconnect Bandwidth}}
 \right)$$
 
-From each operator's $T_{sol}$, we can propagate bottom-up through the computation graph to derive the SOL time of the prefill/decode phases, and from that get a cost estimate for inference.
+The third term only exists for multi-GPU deployments: the collectives derived from parallel sharding (see 3.3), whose time is set by interconnect bandwidth. The three terms are maxed rather than added, because compute and data movement overlap within one kernel.
+
+From each operator's $T_{sol}$, we can propagate bottom-up through the computation graph to derive the SOL time of the prefill/decode phases, and from that get a cost estimate for inference. A pure bandwidth formula puts small sizes at nearly zero time, so the actual pricing adds two latency floors: the fixed cost of each kernel launch, and a per-hop latency for collectives under the α-β model (see 3.4).
 
 
 ### 1.1 Core architecture
@@ -457,16 +460,39 @@ The tables hold only what has to be decided on the spot during the walk: shapes 
 
 The reason I insist on not storing them: if a quantity can be computed from shapes and is also stored separately, nothing guarantees the two stay consistent. One day someone changes the shape derivation and forgets the stored copy, and the two quietly diverge without any error. If everything is computed from shapes, there's only one origin; wire one edge wrong and every derived number moves together. That's exactly what the claim in 3.5 that "graph errors can be detected" relies on. The full argument is in [`docs/evaluation_model.md`](https://github.com/shenh10/HuggingArch/blob/main/docs/evaluation_model.md).
 
-### 3.2 Fusion
+### 3.2 Fusion: which graph the SOL is computed on
 
-A spec describes the computation graph in the mathematical sense, but real inference frameworks fuse a chain of ops into one kernel: the three separate Q, K, V projections in the spec may be a single fused matmul in vLLM. HuggingArch models "how the framework fuses" explicitly as a table: each fusion rule describes an op topology that can be merged, and each framework (vLLM / sglang, per version) declares which rules it actually enables. These rules were compiled one by one from the vLLM and sglang source code.
+Real inference frameworks don't launch one kernel per op. The Q, K and V projections are a single merged matmul in vLLM; attention's scoring, softmax and weighted sum are one kernel in FlashAttention, and the score matrix in between never touches HBM. SOL takes each kernel's bottleneck and sums them, so **which graph you compute it on directly decides what the SOL is**.
 
-Fusion has two subtleties:
+#### Without fusion, SOL is badly underestimated
 
-- **It comes after communication.** A fused kernel has no cost formula of its own; its FLOPs and memory traffic are simply the sum of the ops it absorbs. And communication itself can get fused in too, e.g. an all-reduce and the RMSNorm right after it combined into one kernel. So communication has to be inserted per the sharding plan first, and fusion happens after that.
-- **It depends on conditions, not just topology.** Even when the ops are wired the right way, the framework doesn't necessarily fuse them. For example, for Qwen3-MoE attention sglang can combine QK-norm and RoPE into one kernel, but only when head_dim is 64, 128, or 256, RoPE covers the entire head, activations are BF16, it runs on CUDA (and the corresponding launch flag is on). Otherwise it's still several separate kernels. These conditions are written next to the fusion rule, and matching checks them against the actual dims, precision, and GPU of this evaluation. Likewise, prefill and decode may walk different subgraphs to begin with (e.g. MLA switches to the absorbed variant in decode), so each phase is fused separately.
+Compute on the naive graph and every intermediate edge gets written back to HBM and read out again, so memory bytes are heavily overcounted. Below are two SOLs on the same spec and the same deployment, differing only in the fusion step (vLLM, pure theoretical roofline, 1024 input and 1024 output tokens, decode batch at the most the KV budget fits):
 
-Fusion only changes the graph's structure; the numbers still come from the same evaluation. In the UI, the Inspector draws the pre-fusion graph, the inference page's computation graph draws the post-fusion graph, and expanding a fused node shows which ops it absorbed; the Fusion page lists which rules a given model hits on a given framework and version. That way the spec doesn't stop at a "theoretical op graph" but also lines up with "how this framework, at this version, will actually run it".
+| Model · deployment | Prefill step: before → after fusion | Decode step: before → after fusion |
+|---|---|---|
+| DeepSeek-V3 · 8×B200 attention DP + EP | 55.5 → 42.6 ms (1.30×) | 52.1 → 37.4 ms (1.39×) |
+| DeepSeek-V4-Pro · 8×B200 attention DP + EP | 76.3 → 56.2 ms (1.36×) | 94.2 → 67.3 ms (1.40×) |
+| Qwen3-32B · 2×H100 TP | 46.8 → 39.9 ms (1.17×) | 23.3 → 21.6 ms (1.08×) |
+| DeepSeek-V3, 32K input | 9.90 → 2.34 s (4.2×) | 41.4 → 24.4 ms (1.70×) |
+| Qwen3-32B, 32K input | 6.56 → 1.81 s (3.6×) | 25.4 → 23.5 ms (1.08×) |
+
+Without modeling fusion, the SOL throughput of the DeepSeek family is underestimated by about 30%, and long-context prefill is off by several times (the attention score matrix grows with the square of the context). Decode of dense models is affected least, because its time goes mostly to reading weights, which fusion can't save. The reverse is just as wrong: count a fusion the framework doesn't actually do, and the SOL comes out too optimistic. So "what does the framework actually fuse" has to be a table with sources.
+
+#### A fusion table compiled from framework source code
+
+HuggingArch models fusion in two layers. A **fusion plan** describes the naive subgraph one fused kernel replaces (one plan is one kernel launch). A **framework binding** declares which plans each framework enables at which version; every entry carries the file and line in the framework's source where the kernel is called, checked one by one at the audited version.
+
+The library currently holds 80 fusion plans; sglang v0.5.22 binds 60 of them and vLLM v0.32.0 binds 65. They cover attention (including DSA / QSA sparse attention), MoE routing and fused MoE, the many combinations of QK-norm + RoPE, the indexer and compressed KV of DeepSeek-V3.2 / V4, V4's mHC, GDN / KDA linear attention, and communication fusions such as all-reduce + RMSNorm.
+
+![The Fusion page: on the left, all 80 fusion plans and the frameworks that bind them; on the right, the selected plan's naive subgraph. flash_attention absorbs the three steps of scoring, softmax and weighted sum](/blog/huggingarch/fusion-plan-page.png)
+
+Matching has three subtleties:
+
+- **It comes after communication and casts.** A fused kernel's FLOPs are the sum of the ops it absorbs, and its memory traffic counts only the tensors crossing HBM at the fusion boundary. Communication and quantization casts can themselves be fused in (all-reduce + RMSNorm; `silu_and_mul` writing its output straight to FP8), so communication is inserted first, then casts, and fusion last.
+- **It depends on conditions, not just topology.** sglang's QK-norm + RoPE takes the fused kernel only when head_dim is 64 / 128 / 256, activations are BF16, it runs on CUDA, and the launch flag is on. These conditions live in the binding and are checked against the actual dims, precision, GPU and parallelism of this evaluation.
+- **Larger plans match first.** Plans overlap (Kimi-K3's whole-mixer kernel contains the short convolution, the gated norm and the recurrence), so matching goes from the largest subgraph to the smallest, and each op belongs to exactly one launch.
+
+Fusion only changes the graph's structure; the numbers still come from the same evaluation. The inference page's per-op table is the list of post-fusion kernels, with a footer saying how much fusion saves against the naive roofline; the breakdown on the inference page can be expanded to show the subgraph each fused kernel absorbed.
 
 ### 3.3 Parallel sharding: sharding is state propagated along the graph, and communication is derived
 
@@ -510,17 +536,28 @@ Finally, per-GPU shapes, FLOPs, and memory are all "read" from the same evaluati
 
 ### 3.4 SOL-based prefill / decode throughput prediction
 
-The Intro gave the SOL time of a single op, $T_{\mathrm{SOL}} = \max(\text{FLOPs}/\text{peak compute},\ \text{bytes}/\text{bandwidth})$. The inference page extends it to a whole deployment and answers three questions: does it fit on each GPU, how long does one step take, and how big a batch can it run. The inputs are the parallel plan from 3.3 and a GPU spec table (memory, bandwidth, peak compute; adding a GPU is adding one row).
+The Intro gave the SOL time of a single op: the largest of compute time, memory time and communication time. The inference page extends it to a whole deployment and answers three questions: does it fit on each GPU, how long does one step take, and how big a batch can it run. The inputs are the parallel plan from 3.3 and a GPU spec table (memory, bandwidth, peak compute; adding a GPU is adding one row).
 
 This layer doesn't depend on any kernel measurements. What it gives is the lower-bound time set by the hardware roofline, which no implementation can beat. Under the same yardstick, different parallel plans, different GPUs, and different models can be compared directly, without interference from how good or bad a kernel implementation happens to be. That's exactly the core need behind the "cost accounting" in the Intro.
 
 Below, using DeepSeek-V3 on 8 B200s (attention data parallelism + expert parallelism, 1024 input and 1024 output tokens) as the example:
 
-![Estimation results on the inference page: memory budget, max batch, TTFT / TPOT for DeepSeek-V3 on 8×B200, plus the SOL summary and per-op breakdown of one decode step](/blog/huggingarch/inference-breakdown.png)
+![Estimation results on the inference page: memory budget, max batch, TTFT / TPOT for DeepSeek-V3 on 8×B200, plus the SOL summary of one decode step, split by the term that bounds each op into compute / memory / comm / launch](/blog/huggingarch/inference-breakdown-2026-10.png)
 
-**Memory: weights first, the rest goes to KV.** Each B200 has 180 GiB; at 90% usable that's 162 GiB. Weights spread across GPUs per the sharding plan come to 93.92 GiB per GPU. The byte counts come from the storage table in 2.5 that was reconciled against the checkpoint, with FP8 weights, the small amount of BF16, and quant scales each counted on their own. The remaining 68 GiB is the KV cache budget. KV is accounted according to each cache tensor's own growth law: GQA's K and V grow per token, MLA stores only the compressed latent plus one shared rope key, sliding windows cap at the window length, and the recurrent state of linear attention and SSMs doesn't grow with context. A single layer can also carry several caches with different laws at once (one DeepSeek-V4 layer has sliding-window KV, compressed KV, and indexer keys, each counted separately; the full model is in [`docs/kv_cache_storage.md`](https://github.com/shenh10/HuggingArch/blob/main/docs/kv_cache_storage.md)). In this example, KV per request is 137 MiB, decode fits at most 507 requests, and the bottleneck is KV; prefill's batch is capped first by activations, at only 205.
+**Memory: weights first, the rest goes to KV.** Each B200 has 180 GiB; at 90% usable that's 162 GiB. Weights spread across GPUs per the sharding plan come to 93.92 GiB per GPU. The byte counts come from the storage table in 2.5 that was reconciled against the checkpoint, with FP8 weights, the small amount of BF16, and quant scales each counted on their own. The remaining 68 GiB is the KV cache budget. KV is accounted according to each cache tensor's own growth law: GQA's K and V grow per token, MLA stores only the compressed latent plus one shared rope key, sliding windows cap at the window length, and the recurrent state of linear attention and SSMs doesn't grow with context. A single layer can also carry several caches with different laws at once (one DeepSeek-V4 layer has sliding-window KV, compressed KV, and indexer keys, each counted separately; the full model is in [`docs/kv_cache_storage.md`](https://github.com/shenh10/HuggingArch/blob/main/docs/kv_cache_storage.md)). In this example, KV per request is 137 MiB, decode fits at most 507 requests, and the bottleneck is KV; prefill's batch is capped first by activations, at only 345.
 
-**Time: take each op's bottleneck, then sum.** For each op, three terms are computed (compute time, memory time, communication time), and the largest becomes its SOL; one step's time is the sum over all ops, with no assumption that kernels overlap. That's where the per-op table in the lower half of the figure comes from: each row marks whether the op is compute-bound or memory-bound and its arithmetic intensity, and fused kernels (3.2) and inserted communication (3.3) each get a row too. Summed up, in this configuration one decode step takes 35.9 ms: 72% of the time goes to memory access, 18% to communication, and only 9% to compute, a textbook bandwidth-bound case. TTFT is 40.1 ms, which works out to about 14,000 tokens/s per GPU.
+**Time: take each op's bottleneck, then sum.** Each op takes the largest of four terms, and one step's time is the sum over all ops, with no assumption that kernels overlap:
+
+$$t_{\mathrm{op}} = \max\left(\frac{\text{FLOPs}}{\text{peak compute}},\ \frac{\text{bytes}}{\text{HBM bandwidth}},\ t_{\mathrm{comm}},\ t_{\mathrm{launch}}\right),\qquad T_{\text{step}} = \sum_{\mathrm{op}} t_{\mathrm{op}}$$
+
+The first two terms are the roofline (peak compute taken at the matmul's actual precision). The last two correct the pure roofline, and they exist for the small cases:
+
+- **Communication uses the α-β model**: $t_{\mathrm{comm}} = \text{payload} \times f_{\text{algo}} / B_{\text{link}} + \text{hops} \times \alpha$. The β term prices bandwidth on the link each phase actually crosses (NVLink inside a node, RDMA across nodes); the α term counts the hops of the latency-optimal schedule (an all-reduce is $2\lceil\log_2 N\rceil$ hops), 2 µs per hop by default. Large messages are bandwidth-bound; a decode TP all-reduce of a few KB is latency-bound.
+- **Kernels have a launch floor**: an RMSNorm that reads and writes a few KB takes nanoseconds by bandwidth, but any launch takes at least a microsecond or two. Each kernel gets a floor of 1 µs by default. It's a floor, not an addend, so large kernels are unaffected.
+
+Both defaults can be set per request, and they remain estimates until Kernel Bench measures them. At large batch they barely show: in the example above, one decode step is 36.5 ms by pure roofline and 37.4 ms corrected. But with fine-grained TP and a small batch they decide the result: Qwen3-8B with TP across 8 H100s at batch 1 is 0.58 ms per step by pure roofline and 1.70 ms corrected, and the all-reduce hop latency alone (36 layers × 2 × 6 hops × 2 µs) is 0.86 ms. Without the correction, throughput is overestimated by nearly 3×, and comparisons between parallel plans lean toward cutting TP ever finer.
+
+Each row of the per-op table marks which term bounds that op and its arithmetic intensity, and fused kernels and inserted communication each get a row. Summed up, in this configuration one decode step takes 37.4 ms: 70% in memory access, 19% in communication, 10% in compute, a textbook bandwidth-bound case, about 14,000 tokens/s per GPU; TTFT is 42.6 ms.
 
 **Sweeps: one point isn't enough, you need curves.** The Scaling panel at the top of the inference page sweeps the same estimate along several axes: fix 4K context and sweep expert parallelism from 4 GPUs to 256, comparing per-GPU throughput across GPUs; fix 8 B200s and sweep batch × context length to see how prefill and decode throughput change; and separately look at how per-request KV grows with context and how many requests fit on one GPU. Points beyond the model's published context limit (163,840 for V3) are clearly marked: they're extrapolations, not a range the model can actually serve.
 
@@ -562,14 +599,38 @@ The list of supported libraries and kernels is in [`docs/measured_calibration.md
 
 I think a database-centered Kernel Bench is meaningful in its own right. In practice you're constantly benchmarking kernels, but the results tend to lie scattered across docs, spreadsheets, and chat logs: what shape was measured, what dtype, which library version, on which GPU. It's hard to say after the fact, let alone put side by side with someone else's results.
 
-HuggingArch gives every test a complete workload signature: op type, the shape this op cares about, dtype, GPU, prefill or decode, parallelism, plus library name, version, and kernel name. With that signature, all test data can be stored, queried, and compared systematically, like rows in a database. The whole flow goes like this:
+HuggingArch gives every test a complete workload signature: op type, shape, dtype, GPU, prefill or decode, parallelism, plus library name, version, and kernel name. All test data can then be stored, queried, and compared like rows in a database. The corpus currently holds over 280,000 measured rows, covering 60 models and 13 kernel libraries.
 
-1. **Generate test targets.** Export a test plan from a model and a set of batch / context values, i.e. all the kernel shapes one real inference would hit (see 3.6).
-2. **Benchmark locally.** The `hbench` CLI prepares an isolated environment for each kernel library on your own machine (different libraries' dependencies often conflict), and calls the corresponding provider to benchmark each one; every result row is stamped with the library version actually installed. The version is part of the data, and results are append-only, never overwritten.
-3. **Validate.** Each result is first compared numerically against the reference implementation, then checked for MFU / MBU exceeding the hardware limit; results that fail never leave your machine. After upload, the cloud computes it again and flags anomalous rows.
-4. **Upload and manage.** Uploaded data is private by default and only calibrates your own estimates; if you want to contribute it to everyone, submit it for review, and once an admin approves it gets merged into the shared corpus. The web UI lets you browse, filter, and visualize all historical data.
+#### From fusion plans to providers
 
-This way, all implementations of the same op can be compared side by side, and so can the same kernel across different framework versions. Kernel benchmarking no longer needs someone running and recording it by hand over and over: kernel developers can focus on optimizing the kernels themselves, and inference engine developers can find the current best implementation right here. Full CLI usage is in [`kernel_bench/README.md`](https://github.com/shenh10/HuggingArch/blob/main/kernel_bench/README.md).
+Kernel Bench is wired to the fusion table of 3.2. Every node of the inference graph, a naive op or a fused kernel, belongs to an **op signature**: a math contract with a PyTorch eager reference implementation. Each library's implementation of it registers as a **provider**, declaring the dtypes, phases, shape constraints and minimum GPU architecture it supports. A fusion plan maps to exactly one signature, so from a plan you can list every kernel in the ecosystem that runs it: `flash_attention` maps to FlashAttention 2/3/4, FlashInfer, and the FA3 that vLLM / sglang ship; `fused_add_rmsnorm` maps to the FlashInfer, sglang and vLLM implementations. 79 of the 80 plans connect to a measurable kernel; the remaining one, `gated_act_ffn`, is two GEMMs around a `silu_and_mul` in the frameworks, not one kernel.
+
+The mapping is clickable both ways. Each plan on the Fusion page lists all its providers, and clicking through lands on that kernel's data in Kernel Bench; the Providers view of Kernel Bench lists all 330 kernels by library, with their signature, capabilities and whether they've been measured, and why not if they haven't. Estimates read measurements along the same chain: each row of the per-op table looks itself up by its signature, per-GPU shape and dtype; by default it takes the selected framework's own kernel, and "envelope" mode takes the fastest across all libraries.
+
+![The Providers view of Kernel Bench: the kernel catalog grouped by library, with signature, dtypes, phases, shape constraints, minimum SM and coverage; 82 of 330 kernels have measurements](/blog/huggingarch/kernelbench-providers.png)
+
+#### The flow
+
+1. **Generate test targets.** Export, from a model and a set of batch / context values, every kernel shape one real inference would hit (after fusion and per-GPU sharding; see 3.6).
+2. **Benchmark locally.** The `hbench` CLI prepares an isolated environment for each kernel library (their dependencies often conflict) and benchmarks each kernel; every row is stamped with the library version actually installed, and results are append-only.
+3. **Validate.** Results are first compared numerically against the reference implementation, then checked for MFU / MBU above the hardware limit; failures never leave your machine, and the cloud recomputes after upload.
+4. **Upload and manage.** Data is private by default and only calibrates your own estimates; once submitted and approved, it joins the shared corpus.
+
+#### Utilization curves, drawn automatically
+
+Tables don't show trends, so Kernel Bench draws MFU / MBU curves for any filter: the x axis is the tokens one call processes, each point is the fastest kernel at that shape, and the same kernel problem (e.g. a GEMM's n and k) is joined into one line across token counts.
+
+![fused_add_rmsnorm on H100: the colour is the library that won each shape (FlashInfer / sglang / vLLM); purely bandwidth-bound, MBU is nearly 0 below a few hundred tokens and only climbs to 80–90% at tens of thousands](/blog/huggingarch/kernelbench-curves-libraries.png)
+
+Charts like this answer practical questions directly. The one above shows that residual-add + RMSNorm can't come close to saturating bandwidth at the few dozen tokens typical of decode; its time is almost all launch overhead, which is what the launch floor in 3.4 rests on. The three implementations are hard to tell apart, and the winner changes from shape to shape.
+
+Click a line and it is highlighted on both charts, with its points listed below (split, phase, kernel, time, MFU, MBU); arrow keys step through them, and the header gives the predicted saturation point.
+
+![A Qwen3-32B GEMM pinned (n=12800, k=5120, H100, BF16): at small batch MBU holds around 65% while MFU rises linearly, predicted saturation is about 322 tokens; past 1K tokens MFU settles at 71–79%](/blog/huggingarch/kernelbench-curve-pinned.png)
+
+This turns the roofline's knee into a measurement: at small batch, reading the weights alone takes 60 µs, and more tokens add almost no time; past saturation, time grows linearly with tokens and MFU stays above 70%. That's the "how fast can it go today" of 3.6.
+
+This way, every implementation of an op, and every version of a kernel, can be compared side by side. Kernel developers can focus on optimizing the kernels themselves, and inference engine developers can find the current best implementation right here. Full CLI usage is in [`kernel_bench/README.md`](https://github.com/shenh10/HuggingArch/blob/main/kernel_bench/README.md).
 
 ---
 
@@ -641,9 +702,9 @@ So as a coder in 2026, you need both SOTA tokens and cheap tokens!
 
 HuggingArch is still an evolving scaffold. A few directions for what's next:
 
-- **Correctness checks and fixes for existing models**: there are a lot of models, and it'll take time to analyze them more carefully and verify the results. The numbers for some common models have been checked through observation and manual review and look solid, but one pair of eyes can't cover everything, and new models keep coming in, so over the coming months I'll probably verify correctness along the way through manual analysis.
+- **Correctness checks and fixes for existing models**: there are a lot of models, and it'll take time to analyze them more carefully and verify the results. The numbers for some common models have been checked through observation and manual review and look solid, but one pair of eyes can't cover everything, and new models keep coming in, so modeling or implementation bugs may well remain in many places. Please bear with them, and do point out any number that looks obviously wrong; over the coming months I'll probably verify correctness along the way through manual analysis.
 - **More precise inference modeling**: building on the existing speculative-token and `ep_load_factor` parameters, add more scheduling detail, and calibrate theoretical comm time against more measured communication numbers, so the estimates get closer to real deployments.
-- **A thicker measured corpus**: expand the GPU models, op libraries and models covered by the measured corpus. Every additional measurement narrows the SOL upper bound a bit more toward achievable throughput.
+- **A thicker measured corpus**: expand communication-library benchmarks, and expand the GPU models, op libraries and models covered by the measured corpus. Every additional measurement narrows the SOL upper bound a bit more toward achievable throughput.
 - **A more complete model design workflow**: the repo already supports importing custom models; the next step is to make editing, comparison and feedback during architecture design into a more complete interactive loop.
 - **Training cost modeling**: extend cost modeling from inference to training. Is this even possible? (PP bubbles maybe not, but memory planning should be pretty easy.) Happy to discuss, come find me.
 
@@ -651,6 +712,7 @@ HuggingArch is still an evolving scaffold. A few directions for what's next:
 
 This is an open, side-project-style project. Stars are welcome, and so are developers who want to build it together. Ways to get involved:
 
+- **Contribute test machines**: to make the measured corpus more solid, we need lots of GPU machines to test on. Every GPU type is in short supply!
 - **Contribute model specs**: run the agentic generation pipeline for a model that isn't supported yet. Publishing to the cache re-requires `validate()` to return `valid: true`, which includes `model_storage_bytes.diff == 0`. You then run Review on your account page, and after it PASSes you Open PR yourself; the service creates the spec bundle PR through a GitHub App. Fill in your GitHub handle in your profile and the PR commit will carry a `Co-authored-by` trailer. Promoting a new draft component is a separate maintainer process.
 - **Contribute measured corpus data**: run `kernel_bench` on your own GPUs and upload the measured CSV. This data immediately calibrates your own estimates (no need to make it public), and you can also nominate it into the shared corpus, where after review it becomes a public baseline visible to everyone.
 - **Contribute components and fusion bindings**: a new topology component goes through `components/drafts/` → review → `backend.arch.promote`; fusion plans / framework bindings are submitted through the normal code review process for their registry.
