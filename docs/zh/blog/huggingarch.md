@@ -62,10 +62,13 @@ Real-World GPU Kernels Against Hardware Limits](https://arxiv.org/pdf/2603.19173
 $$T_{\mathrm{SOL}} =
 \max\left(
 \frac{\text{Total FLOPs}}{\text{Compute Throughput}},
-\frac{\text{Total Fused Bytes}}{\text{Memory Bandwidth}}
+\frac{\text{Total Fused Bytes}}{\text{Memory Bandwidth}},
+\frac{\text{Comm Bytes}}{\text{Interconnect Bandwidth}}
 \right)$$
 
-根据每个算子的$T_{sol}$ ，我们可以通过计算图的传播自底向上推算出prefill/decode 阶段的 SOL 时间，从而得到对推理的成本估计。
+第三项是多卡部署才有的：并行切分推出的集合通信（见 3.3 节），时间由卡间互联带宽决定。三项取 max 而不是相加，因为同一个 kernel 里计算和数据搬运是重叠的。
+
+根据每个算子的$T_{sol}$ ，我们可以通过计算图的传播自底向上推算出prefill/decode 阶段的 SOL 时间，从而得到对推理的成本估计。纯带宽公式在小尺寸下会把时间算得接近零，所以实际计价时还加了两个延迟下限：每次 kernel launch 的固定开销，以及集合通信按 α-β 模型计入的每跳延迟（见 3.4 节）。
 
 
 ### 1.1 核心架构
@@ -457,16 +460,40 @@ spec 可信之后，最直接的用处是把一个模型看清楚。Inspector �
 
 之所以坚持不存，是因为一个量如果既能从形状算出来、又另存了一份，两份之间就没有任何机制保证一致：哪天改了形状推导、忘了改存下来的那份，两边就悄悄对不上，而且不会报错。都从形状现算，就只有一个出处；图连错一条边，所有派生数字会一起跟着变——3.5 节说的"图错误能被检测出来"就靠这一点。完整论证见 [`docs/evaluation_model.md`](https://github.com/shenh10/HuggingArch/blob/main/docs/evaluation_model.md)。
 
-### 3.2 Fusion
+### 3.2 Fusion：SOL 算的是哪张图
 
-Spec 描述的是数学意义上的计算图，但真实的推理框架会把一串算子融合成一个 kernel：spec 里分开的 Q、K、V 三个投影，在 vLLM 里可能就是一次融合的矩阵乘。HuggingArch 把"框架怎么融"显式建成一张表：每条融合规则描述一段可以合并的算子拓扑，每个框架（vLLM / sglang，按版本）声明自己实际启用了哪些规则。这些规则都是从 vLLM 和 sglang 的源码里逐条整理出来的。
+真实的推理框架不会一个算子起一个 kernel：Q、K、V 三个投影在 vLLM 里是一次合并的矩阵乘；注意力的打分、softmax、加权求和在 FlashAttention 里是一个 kernel，中间的分数矩阵根本不落 HBM。SOL 是逐 kernel 取瓶颈再相加的，所以**拿哪张图去算，直接决定 SOL 是多少**。
 
-融合有两个讲究：
+#### 没有 fusion，SOL 会被严重低估
 
-- **排在通信之后。** 融合后的 kernel 没有自己的代价公式，它的 FLOPs 和访存就是被吸收的那些算子的加总；而通信本身也可能被融进去，比如 all-reduce 和紧随其后的 RMSNorm 合成一个 kernel。所以要先按切分方案插好通信，再做融合。
-- **看条件，不只看拓扑。** 算子连法对得上，框架也不一定真的融。比如 sglang 对 Qwen3-MoE 的注意力，能把 QK-norm 和 RoPE 合成一个 kernel，但只在 head_dim 是 64、128 或 256，RoPE 覆盖整个 head，激活是 BF16，跑在 CUDA 上（并且打开了对应的启动开关）时才这么做，否则还是分开的几个 kernel。这些条件写在融合规则旁边，匹配时拿这次求值里实际的维度、精度和 GPU 去判断。同理，prefill 和 decode 走的子图本身可能不同（比如 MLA 在 decode 时换成吸收版），所以两个阶段各融各的。
+直接拿朴素图去算，每条中间边都要写回 HBM 再读出来，访存字节被大幅多算。下面是同一份 spec、同一个部署，只差一步融合的两次 SOL（vLLM，纯理论 roofline，输入输出各 1024 token，decode batch 取 KV 能放下的最大值）：
 
-融合只改图的结构，数字仍从同一次求值里取。页面上，Inspector 画融合前的图，推理页的计算图画融合后的图，展开一个融合节点能看到它吸收了哪些算子；Fusion 页则列出某个模型在某个框架、某个版本上命中了哪些规则。这样 spec 就不止停在"理论算子图"，还能对上"这个框架这个版本实际会怎么跑"。
+| 模型 · 部署 | prefill 一步：融合前 → 融合后 | decode 一步：融合前 → 融合后 |
+|---|---|---|
+| DeepSeek-V3 · 8×B200 attention DP + EP | 55.5 → 42.6 ms（1.30×） | 52.1 → 37.4 ms（1.39×） |
+| DeepSeek-V4-Pro · 8×B200 attention DP + EP | 76.3 → 56.2 ms（1.36×） | 94.2 → 67.3 ms（1.40×） |
+| Qwen3-32B · 2×H100 TP | 46.8 → 39.9 ms（1.17×） | 23.3 → 21.6 ms（1.08×） |
+| DeepSeek-V3，输入改成 32K | 9.90 → 2.34 s（4.2×） | 41.4 → 24.4 ms（1.70×） |
+| Qwen3-32B，输入改成 32K | 6.56 → 1.81 s（3.6×） | 25.4 → 23.5 ms（1.08×） |
+
+不建模融合，DeepSeek 系列的 SOL 吞吐会被低估三成左右，长上下文的 prefill 差出好几倍（注意力分数矩阵随上下文平方增长）。稠密模型的 decode 影响最小，因为时间主要花在读权重上，融合省不掉。反过来，把框架实际没做的融合算进去，SOL 又会虚高。所以"框架到底融了什么"必须是一张有出处的表。
+
+#### 一张从框架源码里整理出来的融合表
+
+HuggingArch 把融合建成两层：**融合计划**描述一个 fused kernel 替换掉的朴素子图（一个计划就是一次 kernel launch）；**框架绑定**声明每个框架在哪个版本上启用了哪些计划，每一条都带着框架源码里调用该 kernel 的文件和行号，在审计版本上逐条核对过。
+
+目前库里有 80 个融合计划，sglang v0.5.22 绑定了其中 60 个，vLLM v0.32.0 绑定了 65 个，覆盖注意力（含 DSA / QSA 稀疏注意力）、MoE 路由与 fused MoE、QK-norm + RoPE 的各种组合、DeepSeek-V3.2 / V4 的 indexer 与压缩 KV、V4 的 mHC、GDN / KDA 线性注意力，以及 all-reduce + RMSNorm 这样的通信融合。
+
+![Fusion 页：左边是全部 80 个融合计划和绑定它的框架，右边是选中计划的朴素子图——flash_attention 吸收打分、softmax 和加权求和三步](/blog/huggingarch/fusion-plan-page.png)
+
+
+匹配时有三点讲究：
+
+- **排在通信和 cast 之后。** fused kernel 的 FLOPs 是被吸收算子的加总，访存只算融合边界上进出 HBM 的张量。通信和量化 cast 本身也可能被融进去（all-reduce + RMSNorm；`silu_and_mul` 顺带把输出写成 FP8），所以先插通信、再插 cast，最后融合。
+- **看条件，不只看拓扑。** sglang 的 QK-norm + RoPE 只在 head_dim 为 64 / 128 / 256、BF16、CUDA 且打开启动开关时才走融合 kernel。这些条件写在绑定里，按这次求值实际的维度、精度、GPU 和并行度判断。
+- **大的先匹配。** 计划之间会重叠（Kimi-K3 的整块 mixer kernel 包含短卷积、gated norm 和递推），按子图从大到小匹配，每个算子恰好属于一次 launch。
+
+融合只改图的结构，数字仍从同一次求值里取。推理页的逐算子表就是融合后的 kernel 列表，表尾给出融合相对朴素 roofline 省了多少；推理页breakdown 可以点开能看到它吸收的子图。
 
 ### 3.3 并行切分：切分是沿图传播的状态，通信是推出来的
 
@@ -510,17 +537,28 @@ q_proj 输出  [B, s, n_heads·d_head]      切在最后一根轴（按头）
 
 ### 3.4 基于 SOL 的 Prefill / Decode 吞吐预测
 
-Intro 给出了单个算子的 SOL 时间 $T_{\mathrm{SOL}} = \max(\text{FLOPs}/\text{峰值算力},\ \text{bytes}/\text{带宽})$。推理页把它推到整个部署上，回答三个问题：每张卡装不装得下，一步要多久，能跑多大的 batch。输入是 3.3 节的并行方案和一张 GPU 参数表（显存、带宽、峰值算力，加一种卡只加一行）。
+Intro 给出了单个算子的 SOL 时间：算力时间、访存时间、通信时间三者取最大。推理页把它推到整个部署上，回答三个问题：每张卡装不装得下，一步要多久，能跑多大的 batch。输入是 3.3 节的并行方案和一张 GPU 参数表（显存、带宽、峰值算力，加一种卡只加一行）。
 
 这一层不依赖任何 kernel 实测：它给出的是硬件 roofline 决定的下限时间，任何实现都突破不了；在同一个口径下，不同并行方案、不同 GPU、不同模型可以直接比较，不受 kernel 实现好坏的干扰——这正是 Intro 里"算账"最核心的诉求。
 
 下面以 DeepSeek-V3 在 8 张 B200 上（attention 数据并行 + 专家并行，输入输出各 1024 token）为例：
 
-![推理页的估算结果：DeepSeek-V3 在 8×B200 上的显存预算、最大 batch、TTFT / TPOT，以及 decode 一步的 SOL 汇总和逐算子拆解](/blog/huggingarch/inference-breakdown.png)
+![推理页的估算结果：DeepSeek-V3 在 8×B200 上的显存预算、最大 batch、TTFT / TPOT，以及 decode 一步的 SOL 汇总——按卡住每个算子的那一项拆成 compute / memory / comm / launch 四份](/blog/huggingarch/inference-breakdown-2026-10.png)
 
-**显存：先放权重，剩下的给 KV。** B200 每张卡 180 GiB，按 90% 可用算 162 GiB；权重按切分方案摊到每张卡是 93.92 GiB——字节数来自 2.5 节那份和 checkpoint 对过账的存储表，FP8 权重、少量 BF16 和量化 scale 各算各的；剩下的 68 GiB 是 KV cache 的预算。KV 按每条缓存张量自己的规律记账：GQA 的 K、V 逐 token 增长，MLA 只存压缩后的 latent 加一份共享的 rope key，滑窗封顶在窗口长度，线性注意力和 SSM 的循环状态不随上下文增长；一层还可以同时挂几条规律不同的缓存（DeepSeek-V4 的一层同时有滑窗 KV、压缩 KV 和索引键，各算各的，完整模型见 [`docs/kv_cache_storage.md`](https://github.com/shenh10/HuggingArch/blob/main/docs/kv_cache_storage.md)）。落到这个例子上，每个请求的 KV 是 137 MiB，decode 最多放下 507 个请求，瓶颈是 KV；prefill 的 batch 先被激活值卡住，只有 205。
+**显存：先放权重，剩下的给 KV。** B200 每张卡 180 GiB，按 90% 可用算 162 GiB；权重按切分方案摊到每张卡是 93.92 GiB——字节数来自 2.5 节那份和 checkpoint 对过账的存储表，FP8 权重、少量 BF16 和量化 scale 各算各的；剩下的 68 GiB 是 KV cache 的预算。KV 按每条缓存张量自己的规律记账：GQA 的 K、V 逐 token 增长，MLA 只存压缩后的 latent 加一份共享的 rope key，滑窗封顶在窗口长度，线性注意力和 SSM 的循环状态不随上下文增长；一层还可以同时挂几条规律不同的缓存（DeepSeek-V4 的一层同时有滑窗 KV、压缩 KV 和索引键，各算各的，完整模型见 [`docs/kv_cache_storage.md`](https://github.com/shenh10/HuggingArch/blob/main/docs/kv_cache_storage.md)）。落到这个例子上，每个请求的 KV 是 137 MiB，decode 最多放下 507 个请求，瓶颈是 KV；prefill 的 batch 先被激活值卡住，只有 345。
 
-**时间：逐算子取瓶颈，再相加。** 每个算子分别算三项——算力时间、访存时间、通信时间——取最大的那项作为它的 SOL；一步的时间是所有算子之和，不假设 kernel 之间能互相重叠。图中下半部分的逐算子表就是这么来的：每一行标出这个算子是被算力还是访存卡住、算术强度多少，融合后的 kernel（3.2 节）和插入的通信（3.3 节）也各占一行。汇总起来，这个配置下 decode 一步 35.9 ms：72% 的时间花在访存、18% 在通信、只有 9% 在计算，是典型的带宽受限；TTFT 40.1 ms，折合每卡约 1.4 万 token/s。
+**时间：逐算子取瓶颈，再相加。** 每个算子算四项取最大，一步的时间是所有算子之和，不假设 kernel 之间能重叠：
+
+$$t_{\mathrm{op}} = \max\left(\frac{\text{FLOPs}}{\text{峰值算力}},\ \frac{\text{bytes}}{\text{HBM 带宽}},\ t_{\mathrm{comm}},\ t_{\mathrm{launch}}\right),\qquad T_{\text{step}} = \sum_{\mathrm{op}} t_{\mathrm{op}}$$
+
+前两项是 roofline（峰值算力按矩阵乘的实际精度取）。后两项是对纯 roofline 的修正，专门治"小"：
+
+- **通信用 α-β 模型**：$t_{\mathrm{comm}} = \text{payload} \times f_{\text{algo}} / B_{\text{link}} + \text{hops} \times \alpha$。β 项按每段通信实际走的链路（机内 NVLink、跨机 RDMA）计带宽；α 项按延迟最优调度的跳数计（all-reduce 是 $2\lceil\log_2 N\rceil$ 跳），每跳默认 2 µs。大消息看带宽，decode 里只有几 KB 的 TP all-reduce 看延迟。
+- **kernel 有 launch 下限**：一个只读写几 KB 的 RMSNorm 按带宽算只要几纳秒，实际一次 launch 至少一两微秒。每个 kernel 默认下限 1 µs，它是下限不是加数，大 kernel 不受影响。
+
+两个默认值都可以在请求里改，在 Kernel Bench 实测之前仍是估计值。它们在大 batch 下几乎看不见：上面这个例子的 decode 一步，纯 roofline 是 36.5 ms，修正后 37.4 ms。但在 TP 切得碎、batch 又小时会决定结果：Qwen3-8B 在 8 张 H100 上 TP、batch 为 1，纯 roofline 是 0.58 ms 一步，修正后 1.70 ms，光 all-reduce 的跳延迟（36 层 × 2 次 × 6 跳 × 2 µs）就有 0.86 ms。不加修正，吞吐会高估近 3 倍，比较并行方案时也会偏向把 TP 切得更碎。
+
+逐算子表（3.2 节有截图）的每一行标出这个算子被哪一项卡住、算术强度多少，融合 kernel 和插入的通信各占一行。汇总起来，这个配置下 decode 一步 37.4 ms：70% 在访存、19% 在通信、10% 在计算，是典型的带宽受限，折合每卡约 1.4 万 token/s；TTFT 42.6 ms。
 
 **扫描：一个点不够，要看曲线。** 推理页顶部的 Scaling 面板把同一套估算沿几根轴扫开：固定 4K 上下文，把专家并行从 4 张卡扫到 256 张，比较不同 GPU 的每卡吞吐；固定 8 张 B200，扫 batch × 上下文长度，看 prefill 和 decode 的吞吐怎么变；再单独看每个请求的 KV 随上下文怎么涨、一张卡最多能放几个请求。超过模型公布的上下文上限（V3 是 163,840）的点会明确标出来——它们是外推，不是模型真能服务的范围。
 
@@ -562,14 +600,38 @@ SOL 是上界。真实 kernel 只能跑到峰值的一部分，而且哪个 kern
 
 我觉得一个以数据库为中心的 Kernel Bench 本身就很有意义。实际工作中经常要给 kernel 测速，测出来的结果却往往零散地躺在各种文档、表格和聊天记录里：测的是什么形状、什么 dtype、哪个版本的库、在哪张卡上，事后很难说清，更没法和别人的结果放在一起比。
 
-HuggingArch 给每一次测试一个完整的 workload 签名：算子类型、这个算子关心的形状、dtype、GPU、prefill 还是 decode、并行方式，再加上库名、版本和 kernel 名。有了这个签名，所有测试数据就能像数据库里的行一样被系统地存放、查询和比较。整个流程是这样的：
+HuggingArch 给每一次测试一个完整的 workload 签名：算子类型、形状、dtype、GPU、prefill 还是 decode、并行方式，再加上库名、版本和 kernel 名。所有测试数据因此能像数据库里的行一样存放、查询和比较。目前库里有 28 万多行实测，覆盖 60 个模型、13 个算子库。
 
-1. **生成测试目标。** 从一个模型和一组 batch / 上下文导出测试计划，也就是一次真实推理会命中的全部 kernel 形状（见 3.6 节）。
-2. **本地测速。** `hbench` 命令行在你自己的机器上为每个算子库准备隔离的环境（各家依赖经常互相冲突），调用对应的 provider 逐个测速；每一行结果都盖上实际安装的库版本。版本是数据的一部分，结果只追加、不覆盖。
-3. **校验。** 每个结果先和参考实现比对数值，再检查 MFU / MBU 有没有超过硬件上限；不过关的结果不会离开本机。上传之后，云端还会再算一遍，把异常的行标出来。
-4. **上传与管理。** 上传的数据默认私有，只校准你自己的估算；想贡献给所有人，就提交审核，管理员通过后并入共享语料。网页上可以浏览、筛选、可视化全部历史数据。
+#### 从融合计划到 provider
 
-这样一来，同一个算子的所有实现可以横向比较，同一个 kernel 在不同框架版本上的表现也可以横向比较。算子测速不再需要人一遍遍手动跑、手动记：算子开发者可以专注于 kernel 本身的性能优化，推理引擎开发者也能直接从这里找到当前最好的实现。命令行的完整用法见 [`kernel_bench/README.md`](https://github.com/shenh10/HuggingArch/blob/main/kernel_bench/README.md)。
+Kernel Bench 和 3.2 节的融合表是接在一起的。推理图上的每个节点——朴素算子或融合 kernel——都归到一个**算子签名**下：一份数学契约，配一个 PyTorch eager 参考实现。每个库对它的实现注册成一个 **provider**，声明支持的 dtype、阶段、形状约束和最低 GPU 架构。一个融合计划恰好对应一个签名，于是从计划出发就能列出生态里所有能跑它的 kernel：`flash_attention` 对应 FlashAttention 2/3/4、FlashInfer、vLLM / sglang 打包的 FA3；`fused_add_rmsnorm` 对应 FlashInfer、sglang、vLLM 三家。80 个计划里 79 个能连到可测的 kernel，剩下的 `gated_act_ffn` 在框架里本来就是两次 GEMM 夹一个 `silu_and_mul`，不是一个 kernel。
+
+这条映射双向可点：Fusion 页每个计划列出它的全部 provider，点进去就是 Kernel Bench 里的数据；Kernel Bench 的 Providers 页按库列出全部 330 个 kernel，标着签名、能力、有没有测过，没测的写明原因。推理估算读实测也走这条链：逐算子表每一行用自己的签名、每卡形状和 dtype 去库里查，默认取所选框架自己的 kernel，"包络"模式取所有库里最快的。
+
+![Kernel Bench 的 Providers 页：按库分组的 kernel 目录，标出签名、dtype、阶段、形状约束、最低 SM 和覆盖状态；330 个 kernel 中 82 个已有实测](/blog/huggingarch/kernelbench-providers.png)
+
+#### 流程
+
+1. **生成测试目标。** 从一个模型和一组 batch / 上下文导出一次真实推理会命中的全部 kernel 形状（融合之后、每卡切分之后，见 3.6 节）。
+2. **本地测速。** `hbench` 命令行为每个算子库准备隔离的环境（各家依赖经常冲突），逐个测速；每行结果盖上实际安装的库版本，只追加、不覆盖。
+3. **校验。** 先和参考实现比对数值，再检查 MFU / MBU 有没有超过硬件上限；不过关的不离开本机，上传后云端再算一遍。
+4. **上传与管理。** 数据默认私有，只校准你自己的估算；提交审核通过后并入共享语料。
+
+#### 自动画出来的利用率曲线
+
+表格看不出趋势，所以 Kernel Bench 对任意筛选结果自动画 MFU / MBU 曲线：横轴是一次调用处理的 token 数，每个点是这个形状上最快的 kernel，同一个 kernel 问题（比如 GEMM 的同一组 n、k）在不同 token 数上连成一条线。
+
+![fused_add_rmsnorm 在 H100 上：颜色是每个形状上赢的库（FlashInfer / sglang / vLLM）；纯受带宽限制，MBU 在几百 token 以下几乎为 0，上万 token 才爬到 80–90%](/blog/huggingarch/kernelbench-curves-libraries.png)
+
+这类图能直接回答实际问题。上图说明残差加 RMSNorm 在 decode 常见的几十个 token 下根本跑不满带宽，时间几乎全是 launch 开销——这正是 3.4 节 launch 下限的依据；三家实现难分高下，赢家在不同形状间来回换。
+
+点击一条线，它在两张图上同时高亮，下面展开逐点明细（切分、阶段、kernel、耗时、MFU、MBU），方向键逐点移动，表头给出预测的饱和点。
+
+![点开 Qwen3-32B 的一个 GEMM（n=12800，k=5120，H100，BF16）：小 batch 时 MBU 稳定在 65% 左右、MFU 线性上升，预测饱和点约 322 token；过了 1K token 后 MFU 停在 71–79%](/blog/huggingarch/kernelbench-curve-pinned.png)
+
+这张图把 roofline 上的拐点变成了实测：小 batch 时读权重就要 60 µs，加 token 几乎不加时间；过了饱和点，时间随 token 线性增长，MFU 停在七成多——这就是 3.6 节说的"今天实际能多快"。
+
+这样一来，同一个算子的所有实现、同一个 kernel 的不同版本都可以横向比较。算子开发者可以专注于 kernel 本身的优化，推理引擎开发者也能直接从这里找到当前最好的实现。命令行的完整用法见 [`kernel_bench/README.md`](https://github.com/shenh10/HuggingArch/blob/main/kernel_bench/README.md)。
 
 ---
 
@@ -641,15 +703,16 @@ CLAUDE.md 很重要。每个新会话——不管是 Claude、Codex 还是 Kimi�
 
 HuggingArch 仍是一个持续演进的脚手架，接下来几个方向：
 
-- **已有模型的正确性校验/修复**：模型太多了，需要花一些时间更细地分析来校验结果的正确性。虽然一些常见模型的数值通过模型观测和人工审核看过是靠谱的，但一只眼睛看不过来，加上新模型在入库，可能在接下来的时间里通过人工分析的方式顺便校验了正确性。
+- **已有模型的正确性校验/修复**：模型太多了，需要花一些时间更细地分析来校验结果的正确性。虽然一些常见模型的数值通过模型观测和人工审核看过是靠谱的，但一只眼睛看不过来，加上新模型在入库，可能很多地方仍残留建模或者实现的bug，请大家多多包涵，也欢迎提出来明显的数字问题，可能在接下来的时间里通过人工分析的方式顺便校验了正确性。
 - **更精确的 inference 建模**：在已有 speculative-token 与 `ep_load_factor` 参数之上继续扩充调度细节，并以更多通信实测值校准理论 comm 时间，让估算更贴近真实部署。
-- **更厚的实测语料**：扩展 measured corpus 覆盖的 GPU 型号、算子库与模型——每多一条实测，SOL 上界就多一分收窄到可达吞吐。
+- **更厚的实测语料**：扩展通信库测试，扩展 measured corpus 覆盖的 GPU 型号、算子库与模型——每多一条实测，SOL 上界就多一分收窄到可达吞吐。
 - **更完整的 model design 工作流**：仓库已经支持导入 custom model；下一步是让架构设计期的编辑、比较与反馈形成更完整的交互闭环。
 - **训练成本建模**：将成本建模从推理扩展到训练，这个有可能吗（PP bubble也许不行，但memory规划应该很简单）？欢迎找我讨论。
 
 ## 如何 Contribute
 
 这是一个 side-project 性质的开放项目，欢迎 star，也欢迎成为 developer 一起共建。参与方式：
+- **贡献测试机器**：为了把测试语料做的更扎实，需要大量的卡的测试机，所有卡型都缺！
 
 - **贡献模型 spec**：为尚未支持的模型运行 agentic 生成流程。缓存发布会重新要求 `validate()` 返回 `valid: true`，其中包括 `model_storage_bytes.diff == 0`；用户随后在账号页跑 Review，PASS 之后自己 Open PR，服务通过 GitHub App 创建 spec bundle PR。在个人资料里填上 GitHub handle，PR commit 会带 `Co-authored-by` trailer。新 draft component 的 promotion 是另一条 maintainer 流程。
 - **贡献实测语料**：在自己的 GPU 上运行 `kernel_bench` 并上传 measured CSV。这些数据即时校准你自己的估算（无需公开），也可以 nominate 进共享语料、经 review 后成为所有人可见的公开基线。
@@ -673,5 +736,4 @@ HuggingArch 仍是一个持续演进的脚手架，接下来几个方向：
 ```
 
 ## 致谢
-
 感谢我的导师徐葳老师提供本项目所用的 H100 与 RTX 4090 GPU，并在机器运维上给予了切实的帮助。没有这些支持，这个项目难以走到今天。
